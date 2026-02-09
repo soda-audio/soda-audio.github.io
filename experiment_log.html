@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SODA: Experiment Log</title>
+  
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
+  
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+  <link rel="icon" href="./static/images/favicon.jpg">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+</head>
+<body>
+
+<section class="hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+          <h1 class="title is-2 publication-title">SODA Experiment Log</h1>
+          <h2 class="subtitle is-4">Development details, negative results, and training insights</h2>
+          
+          <div class="column has-text-centered">
+            <div class="publication-links">
+              <!-- Back to Main Page Link. -->
+              <span class="link-block">
+                <a href="index.html" class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="fas fa-home"></i>
+                  </span>
+                  <span>Back to Project Page</span>
+                </a>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-widescreen">
+    <div class="columns">
+      
+      <!-- Table of Contents Column (Left) -->
+      <div class="column">
+        <div class="toc-sticky" style="position: sticky; top: 2rem;">
+          <p class="menu-label">
+            Table of contents
+          </p>
+          <ul class="menu-list">
+            <li><a href="#intro">Introduction</a></li>
+            <li>
+              <a href="#basics">Model Basics</a>
+              <ul>
+                <li><a href="#tokenizer-building">Building Tokenizer</a></li>
+              </ul>
+            </li>
+            <li>
+              <a href="#soda-prelim">SODA-preliminary</a>
+              <ul>
+                <li><a href="#prelim-setup">Setup & Hypothesis</a></li>
+                <li><a href="#prelim-results">Results</a></li>
+                <li><a href="#prelim-findings">Findings</a></li>
+              </ul>
+            </li>
+            <li>
+              <a href="#annealing">SODA-prelim Annealing</a>
+              <ul>
+                <li><a href="#annealing-goal">Goal & Motivation</a></li>
+                <li><a href="#annealing-setup">Methodology</a></li>
+                <li><a href="#annealing-results">Results</a></li>
+                <li><a href="#annealing-findings">Findings</a></li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Main Content Column (Right) -->
+      <div class="column is-four-fifths">
+        
+        <!-- Introduction. -->
+        <div class="content has-text-justified">
+          <h2 id="intro">Introduction</h2>
+          <p>
+            This page serves as a detailed record of the experiments conducted during the development of SODA. 
+            Unlike the main paper which focuses on the final validated recipe and key findings, this log documents 
+            the journey, including design choices that were explored but discarded, detailed ablation studies, 
+            and technical nuances of the large-scale training process.
+          </p>
+        </div>
+
+        <!-- Model Basics -->
+        <div class="content has-text-justified">
+          <h2 id="basics">Model Basics</h2>
+          <p>
+            Across our experiments, we use a consistent audio tokenization strategy based on the <a href="https://huggingface.co/kyutai/mimi">Mimi</a> audio codec.
+          </p>
+          <ul>
+            <li><strong>Token Structure:</strong> 8 codebooks (1 semantic + 7 acoustic) flattened into a single stream.</li>
+            <li><strong>Rate:</strong> 1 second of audio ≈ 100 audio tokens (12.5 Hz * 8 codebooks).</li>
+          </ul>
+
+          <h3 id="tokenizer-building">Building Tokenizer</h3>
+          <p>
+            We start with the <a href="https://huggingface.co/stanford-crfm/marin-tokenizer">Marin tokenizer</a> (which is the Llama3 tokenizer) and extend it with audio tokens and special tokens.
+            The final tokenizer is available at <a href="https://huggingface.co/soda-research/marin-mimi-bpe-8cb-16k-tokenizer">soda-research/marin-mimi-bpe-8cb-16k-tokenizer</a> and is used across all SODA experiments (except Qwen3 warm-start runs, which require a Qwen3-based tokenizer).
+          </p>
+          
+          <p><strong>Token Composition:</strong></p>
+          <ul>
+            <li><strong>Text tokens:</strong> 128,256 tokens (inherited from the base Marin tokenizer)</li>
+            <li><strong>Audio tokens:</strong> 16,384 tokens (8 codebooks × 2,048 codebook size for Mimi codec)</li>
+            <li><strong>Special tokens:</strong> 4 new tokens (<code>&lt;|text_start|&gt;</code>, <code>&lt;|text_end|&gt;</code>, <code>&lt;|audio_start|&gt;</code>, <code>&lt;|audio_end|&gt;</code>)</li>
+            <li><strong>Total vocabulary size:</strong> 144,644 tokens</li>
+          </ul>
+          
+          <p>
+            <strong>Decision on BPE Merges:</strong> We initially explored whether BPE merges for audio tokens could improve efficiency, 
+            hypothesizing that recurring audio patterns might benefit from subword tokenization. 
+            However, experiments up to 128K merges (i.e., the audio tokens would be 128K tokens) yielded only ~10% token reduction—insufficient efficiency gain to justify 
+            the cost of learning significantly more tokens. We therefore opted for 0 merges, keeping the audio vocabulary as direct codebook indices.
+          </p>
+          
+          <p>
+            <strong>Note on Implementation:</strong> We map discrete audio token indices (0–16,383) to Unicode characters in the Private Use Area (offset <code>0xE000</code>), 
+            so each audio token becomes a single character. This allows us to treat interleaved audio-text sequences as plain strings, 
+            enabling reuse of existing Marin text-LLM infrastructure and efficient storage. 
+            See <a href="https://huggingface.co/soda-research/marin-mimi-bpe-8cb-16k-tokenizer">our tokenizer page</a> for usage examples.
+          </p>
+          
+          <p><strong>Example interleaved sequence:</strong></p>
+          <pre style="background-color: #f5f5f5; padding: 1em; overflow-x: auto; font-size: 0.85em; border-radius: 4px;"><code>&lt;|begin_of_text|&gt;&lt;|audio_start|&gt;ﶮ𑅆𐄋𐨫𑊚﵄𐅔𑌳𑨸𐰆𐹴𑿘𐰆𑀫𑨸𐛈𑌹𑿘說𐐫𑌳𐅔覆𐰩𑗖勒𐎜𐰥𑵿ￄ𑇗ｖ𐎃𐕀𑒈𑴅𐮍𑗗﹥𐊾𐭫𐲧𑜃𑤀隷ﱭ𑧄簾𐎧𐺝𑀭𐪋𑛂ﴯ𐆠𐭮𑚖﹃𐘿𑇭𑱼﷿𐀈𐠌𑂅怒𐬊𑙐𑨗ﵳ𐇢𐾉𑛈𑤝ﵳ𐔵𐚭ﳫ𐫗𑚷𑱻酪𐑍𑌬𑤑ｻ𐒧𑊛句𐏏𑛂ﰉ𐝀𑰘𐓑𐭘𑰅ﵵ𐜞𐿪𑑂﹃𐰯𑇐ﻝ𐰙𑊔𑰡ﱠ𐄼𐾉𑄓𑰦陼𐔱𐤖𑜃ﾟ𑲮索𐊃𑐆ﰭ𐙯𑨏賂𐂗𐧯𑌐ﮅ𑫗；𐌿𑀴𑊃𑩽稜𐎆𐇶𑤱ﴂ𐞮𑘠ﾱ𐫌𑒬ﹽ𑝅𑱖籠𑤑聾𐛣𐧭𑋷稜ﻫ𑙑𐒅𐦖𑚔﮳𐂜𑍢𑱦９𐴷𐛲𑐨；𐞅𐦯𑈨𑰽９𑂷︘𐞢𐡝𑆤𑠏ﯛ𐎫𑋪𑴗︷𐚍𑋂韛𐌵𐮀ﲹ𐾷𑜴𑰫ﺕ𐒱𐩆𑇣𑶩𐒱𐋹𑊥﮺𑒛ￜ𐀨𐤒𑫳ﾨ𐂑𐲚𑈈ｘ𐎷𑐛𑨶𐹮𑆮𑪸ﶓ𑘁𑵓變𐞐𐪑𑑟ﮎ𐎶摒𐎲𐧞𑓖𑵱諸𐄋𑌹諸𐄋𐣣𑿘﵄𐇡𐰫𑌳ﶪ𐛈𐧞𑆬虜𑤓&lt;|audio_end|&gt;&lt;|text_start|&gt;I've also been taught to understand and produce paralinguistic things like sighing, chuckling, or yawning&lt;|text_end|&gt;&lt;|end_of_text|&gt;</code></pre>
+        </div>
+
+        <!-- SODA-preliminary -->
+        <div class="content has-text-justified">
+          <h2 id="soda-prelim">SODA-preliminary</h2>
+          
+          <h3 id="prelim-setup">Hypothesis & Setup</h3>
+          <p>
+            Goal: To test if pre-training on sequences with interleaved discrete text and audio tokens will result in a model 
+            that can perform reasonable audio tasks (e.g., ASR, zero-shot TTS, speech/audio continuation).
+          </p>
+          
+          <p><strong>Model Configuration:</strong></p>
+          <ul>
+            <li><strong>Model Size:</strong> 0.6B parameters 
+              <span style="font-size: 0.85em; color: #666; display: block; margin-top: 4px;">
+                (Note: Intended to match <a href="https://huggingface.co/Qwen/Qwen3-0.6B">Qwen3-0.6B</a>, but an <a href="https://github.com/marin-community/marin/issues/2098">incorrect head_dim config</a> made it slightly smaller. Fixed in later experiments.)
+              </span>
+            </li>
+            <li><strong>Training Data:</strong> 500B tokens from Yodas2 (approx. 2.5 epochs over 195B unique tokens from 8 languages)</li>
+            <li><strong>Languages:</strong> 8 languages ("en", "es", "fr", "de", "th", "hi", "ar", "zh") sampled by size.
+              <span style="font-size: 0.85em; color: #666; display: block; margin-top: 4px;">
+                (Note: These languages were selected primarily because their processing pipelines were completed first at the start of the project.)
+              </span>
+            </li>
+          </ul>
+
+          <p>
+            <strong>Link:</strong> 
+            <a href="https://wandb.ai/marin-community/marin/runs/exp1699_marin_yodas2-b5edae/">WandB Report</a> 
+            <!-- |  -->
+            <!-- <a href="https://marin.community/data-browser/view/?paths=%5B%22gs%3A%2F%2Fmarin-us-central1%2Fexperiments%2Fexp1699_marin_yodas2-9a5778.json%22%5D">Data Browser</a> -->
+          </p>
+
+          <h3 id="prelim-results">Results</h3>
+          <p>
+            The training loss was stable throughout. We evaluated the final checkpoint on a suite of speech and text tasks.
+            Notably, this preliminary model (<code>SODA-prelim</code>) shows strong acoustic performance but struggles with semantic understanding.
+          </p>
+
+          <div class="table-container">
+            <table class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth">
+              <thead>
+                <tr>
+                  <th>Model</th>
+                  <th>Salmon (Acc)</th>
+                  <th>sWUGGY (Acc)</th>
+                  <th>sBLIMP (Acc)</th>
+                  <th>MMLU (Acc)</th>
+                  <th>ASR (WER↓)</th>
+                  <th>TTS (WER↓)</th>
+                  <th>TTS (SIM↑)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>SpritLM-base-7B</td>
+                  <td>57.2</td>
+                  <td>69.0</td>
+                  <td>58.3</td>
+                  <td>36.9</td>
+                  <td>21.9</td>
+                  <td>~4x.x</td>
+                  <td>~0.05</td>
+                </tr>
+                <tr>
+                  <td>SpritLM-Expr-7B</td>
+                  <td>67.1</td>
+                  <td>65.0</td>
+                  <td>54.2</td>
+                  <td>?</td>
+                  <td>37.9</td>
+                  <td>~5x.x</td>
+                  <td>~0.10</td>
+                </tr>
+                <tr>
+                  <td>Llama-Mimi-1.3B</td>
+                  <td>73.6</td>
+                  <td>68.7</td>
+                  <td>54.3</td>
+                  <td>∅</td>
+                  <td>∅</td>
+                  <td>∅</td>
+                  <td>∅</td>
+                </tr>
+                <tr>
+                  <td>Llama-Mimi-8B</td>
+                  <td>73.2</td>
+                  <td>68.8</td>
+                  <td>55.1</td>
+                  <td>∅</td>
+                  <td>∅</td>
+                  <td>∅</td>
+                  <td>∅</td>
+                </tr>
+                <tr>
+                  <td><strong>SODA-prelim (0.6B)</strong></td>
+                  <td>69.4</td>
+                  <td>57.8</td>
+                  <td>50.9</td>
+                  <td>25.0</td>
+                  <td>15.2</td>
+                  <td>9.2</td>
+                  <td>0.516</td>
+                </tr>
+              </tbody>
+            </table>
+            <p class="help">SpiritLM TTS estimated from reported results on another dataset. ∅ indicates no skills. ASR: LibriSpeech (test-clean), TTS: seed-tts-eval.</p>
+          </div>
+
+          <p><strong>Key Findings:</strong></p>
+          <ul>
+            <li>For speech-only, the model is okay for acoustic tasks (e.g., on Salmon, it's already doing better than SpiritLM).</li>
+            <li>For semantic knowledge as well as text knowledge, the model is bad (25% on MMLU, near 50% on sBLIMP).</li>
+            <li>For cross-modal tasks like ASR and TTS, the model is okay.</li>
+            <li>The model has some in-context learning ability. For ASR, zero-shot WER↓ = 22% while 2-shot WER↓=15.2%. However, when I tried on other tasks like speech translation (speech-to-text) and speech gender classification, the model cannot do these tasks meaningfully.</li>
+          </ul>
+
+          <h3 id="prelim-findings">Findings</h3>
+          <p>
+            <strong>MMLU Score:</strong> We observed a low MMLU score of 25.0%. Initially, this raised questions, but further analysis suggests this is expected behavior for this scale.
+            A 0.6B model trained primarily on noisy transcripts (where text density is low, ~3 tokens/sec vs 100 audio tokens/sec) effectively has very little "textbook quality" data exposure. In other LLM pre-training, even 1B pure text models often hover around 25% on MMLU (barely clearing random chance). 
+            Consequently, we will drop MMLU from subsequent experiments, and instead use HellaSwag for models in this regime.
+          </p>
+
+          <p>
+            <strong>Next Steps:</strong> The lack of semantic/text knowledge hurts emergent abilities. To address this, future experiments will prioritize:
+          </p>
+          <ol>
+            <li><strong>Better Data:</strong> Swapping Yodas2 for <a href="https://www.openslr.org/94/">MLS</a> (audiobooks with cleaner text) during cooldown.</li>
+            <li><strong>Text Mixing:</strong> Explicitly mixing pure text-only data during pre-training.</li>
+            <li><strong>Warm-starting:</strong> Initializing from text-only trained weights to bootstrap semantic knowledge.</li>
+          </ol>
+          
+          <p>
+            <strong>Artifacts:</strong> The pre-trained weights for SODA-prelim on HF: 
+            <a href="https://huggingface.co/soda-research/soda-600m-prelim">soda-research/soda-600m-prelim</a>.
+          </p>
+        </div>
+
+        <!-- SODA-prelim Annealing -->
+        <div class="content has-text-justified">
+          <h2 id="annealing">SODA-prelim Annealing</h2>
+          
+          <h3 id="annealing-goal">Goal & Motivation</h3>
+          <p>
+            With three large-scale open speech datasets available (Yodas, Emilia, MLS), we needed to determine the optimal data mixture.
+            Running full-scale pre-training for each combination is prohibitively expensive.
+          </p>
+          <p>
+            <strong>Question:</strong> Can we use cheaper methods—specifically <em>annealing</em> (switching data during the learning rate decay phase) or <em>small-scale proxies</em>—to reliably predict the best data source?
+          </p>
+
+          <h3 id="annealing-setup">Methodology</h3>
+          <p>We compared three English-only subsets using two efficient proxies:</p>
+          <ul>
+            <li>
+              <strong>Annealing:</strong> Starting from the stable pre-training phase of SODA-prelim (0.6B), we branched out using different datasets during the cooldown/annealing phase (following the WSD schedule).
+              <br><small><a href="https://wandb.ai/potsawee/marin/groups/Anneal-Blueberry/workspace">WandB Log</a></small>
+            </li>
+            <li>
+              <strong>Small-Scale Scratch:</strong> Training small 150M parameter models on just 10B tokens from scratch (~10 hours on v5p-8). 
+              The goal was to see if these cheap runs correlate with the more expensive annealing runs.
+              <br><small><a href="https://wandb.ai/potsawee/marin/groups/DataMix-150M/workspace">WandB Log</a></small>
+            </li>
+          </ul>
+
+          <h3 id="annealing-results">Results</h3>
+          <div class="table-container">
+            <table class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth">
+              <thead>
+                <tr>
+                  <th>Experiment / Data</th>
+                  <th>sWUGGY</th>
+                  <th>sBLIMP</th>
+                  <th>Salmon</th>
+                  <th>tWUGGY</th>
+                  <th>tBLIMP</th>
+                  <th>ASR (WER↓)</th>
+                  <th>TTS (WER↓)</th>
+                  <th>TTS (SIM↑)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="background-color: #a9a9a9;">
+                  <td colspan="9"><strong>Baseline: SODA-prelim (Full Training)</strong></td>
+                </tr>
+                <tr>
+                  <td>Yodas (multilingual)</td>
+                  <td>57.8</td>
+                  <td>50.9</td>
+                  <td>69.4</td>
+                  <td>71.3</td>
+                  <td>69.0</td>
+                  <td>22.0</td>
+                  <td>9.2</td>
+                  <td>0.516</td>
+                </tr>
+                <tr style="background-color: #a9a9a9;">
+                  <td colspan="9"><strong>Annealing (from SODA-prelim)</strong></td>
+                </tr>
+                <tr>
+                  <td>MLS (English)</td>
+                  <td>56.8</td>
+                  <td>50.6</td>
+                  <td>70.3</td>
+                  <td>69.1</td>
+                  <td>72.2</td>
+                  <td>92.6</td>
+                  <td>35.7</td>
+                  <td>0.366</td>
+                </tr>
+                <tr>
+                  <td>Emilia (English)</td>
+                  <td>58.5</td>
+                  <td>51.0</td>
+                  <td>69.8</td>
+                  <td>58.5</td>
+                  <td>70.5</td>
+                  <td>7.8</td>
+                  <td>6.1</td>
+                  <td>0.557</td>
+                </tr>
+                <tr>
+                  <td>Yodas (English)</td>
+                  <td>57.8</td>
+                  <td>51.0</td>
+                  <td>69.8</td>
+                  <td>73.8</td>
+                  <td>68.6</td>
+                  <td>18.8</td>
+                  <td>12.4</td>
+                  <td>0.502</td>
+                </tr>
+                <tr style="background-color: #a9a9a9;">
+                  <td colspan="9"><strong>Small-Scale Scratch (150M, 10B tokens)</strong></td>
+                </tr>
+                <tr>
+                  <td>MLS (English)</td>
+                  <td>54.9</td>
+                  <td>49.7</td>
+                  <td>69.5</td>
+                  <td>57.2</td>
+                  <td>65.6</td>
+                  <td>105.6</td>
+                  <td>--</td>
+                  <td>--</td>
+                </tr>
+                <tr>
+                  <td>Emilia (English)</td>
+                  <td>55.8</td>
+                  <td>49.4</td>
+                  <td>67.9</td>
+                  <td>48.6</td>
+                  <td>67.1</td>
+                  <td>26.8</td>
+                  <td>--</td>
+                  <td>--</td>
+                </tr>
+                <tr>
+                  <td>Yodas (English)</td>
+                  <td>54.9</td>
+                  <td>49.6</td>
+                  <td>69.4</td>
+                  <td>64.9</td>
+                  <td>60.9</td>
+                  <td>54.1</td>
+                  <td>--</td>
+                  <td>--</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3 id="annealing-findings">Findings</h3>
+          <p>
+            <strong>1. MLS performs poorly:</strong> Despite being a curated audiobook dataset, MLS yielded catastrophic ASR performance (92.6% WER in annealing). 
+            We attribute this to (i) uncased, unpunctuated text creating a distribution mismatch, and (ii) fixed-length 10–20s chunks lacking diversity.
+          </p>
+          <p>
+            <strong>2. Emilia & Yodas are complementary:</strong> Emilia excels at TTS (6.1% WER), while Yodas provides better text knowledge (highest tWUGGY).
+          </p>
+          <p>
+            <strong>3. Small-scale runs are predictive:</strong> The 150M model runs showed the same trend as the expensive annealing runs (MLS performing poorly on ASR, Emilia/Yodas performing better). 
+            This validates using small-scale proxies for future data mixture experiments.
+          </p>
+          <p>
+            <strong>Decision:</strong> We will exclude MLS and use a mixture of <strong>Yodas + Emilia</strong> for the next phase.
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+
+</body>
+</html>
