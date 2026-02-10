@@ -15,6 +15,10 @@
 
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   <script defer src="./static/js/fontawesome.all.min.js"></script>
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>hljs.highlightAll();</script>
 </head>
 <body>
 
@@ -51,14 +55,14 @@
       
       <!-- Table of Contents Column (Left) -->
       <div class="column">
-        <div class="toc-sticky" style="position: sticky; top: 2rem;">
+        <div class="toc-sticky" style="position: sticky; top: 2rem; max-height: calc(100vh - 4rem); overflow-y: auto;">
           <p class="menu-label">
             Table of contents
           </p>
           <ul class="menu-list">
             <li><a href="#intro">Introduction</a></li>
             <li>
-              <a href="#basics">Model Basics</a>
+              <a href="#basics">Basics</a>
               <ul>
                 <li><a href="#tokenizer-building">Building Tokenizer</a></li>
               </ul>
@@ -66,7 +70,8 @@
             <li>
               <a href="#soda-prelim">SODA-preliminary</a>
               <ul>
-                <li><a href="#prelim-setup">Setup & Hypothesis</a></li>
+                <li><a href="#prelim-hypothesis">Hypothesis</a></li>
+                <li><a href="#prelim-setup">Setup</a></li>
                 <li><a href="#prelim-results">Results</a></li>
                 <li><a href="#prelim-findings">Findings</a></li>
               </ul>
@@ -75,11 +80,57 @@
               <a href="#annealing">SODA-prelim Annealing</a>
               <ul>
                 <li><a href="#annealing-goal">Goal & Motivation</a></li>
-                <li><a href="#annealing-setup">Methodology</a></li>
+                <li><a href="#annealing-setup">Setup</a></li>
                 <li><a href="#annealing-results">Results</a></li>
                 <li><a href="#annealing-findings">Findings</a></li>
               </ul>
             </li>
+            <li>
+              <a href="#nemotron">Nemotron Mixture</a>
+              <ul>
+                <li><a href="#nemotron-goal">Goal & Motivation</a></li>
+                <li><a href="#nemotron-setup">Setup</a></li>
+                <li><a href="#nemotron-results">Results</a></li>
+                <li><a href="#nemotron-findings">Findings</a></li>
+              </ul>
+            </li>
+            <li>
+              <a href="#isoflop">IsoFLOP Study</a>
+              <ul>
+                <li><a href="#isoflop-goal">Goal & Motivation</a></li>
+                <li><a href="#isoflop-setup">Setup</a></li>
+                <li><a href="#isoflop-results">Results</a></li>
+                <li><a href="#isoflop-findings">Findings</a></li>
+              </ul>
+            </li>
+            <li>
+              <a href="#nll-correlation">Correlation between Loss and Metrics</a>
+              <ul>
+                <li><a href="#nll-goal">Goal & Motivation</a></li>
+                <li><a href="#nll-setup">Setup</a></li>
+                <li><a href="#nll-results">Results</a></li>
+                <li><a href="#nll-findings">Findings</a></li>
+              </ul>
+            </li>
+            <li>
+              <a href="#longrun">SODA-LongRun</a>
+              <ul>
+                <li><a href="#longrun-goal">Goal & Motivation</a></li>
+                <li><a href="#longrun-setup">Setup & Over-Training</a></li>
+                <li><a href="#longrun-results">Results</a></li>
+                <li><a href="#longrun-findings">Findings</a></li>
+              </ul>
+            </li>
+            <li>
+              <a href="#warmstart">Warm-start vs Cold-start</a>
+              <ul>
+                <li><a href="#warmstart-goal">Goal & Motivation</a></li>
+                <li><a href="#warmstart-setup">Setup</a></li>
+                <li><a href="#warmstart-results">Results</a></li>
+                <li><a href="#warmstart-findings">Findings</a></li>
+              </ul>
+            </li>
+            <li><a href="#open-questions">Open Questions</a></li>
           </ul>
         </div>
       </div>
@@ -100,7 +151,7 @@
 
         <!-- Model Basics -->
         <div class="content has-text-justified">
-          <h2 id="basics">Model Basics</h2>
+          <h2 id="basics">Basics</h2>
           <p>
             Across our experiments, we use a consistent audio tokenization strategy based on the <a href="https://huggingface.co/kyutai/mimi">Mimi</a> audio codec.
           </p>
@@ -137,20 +188,103 @@
             See <a href="https://huggingface.co/soda-research/marin-mimi-bpe-8cb-16k-tokenizer">our tokenizer page</a> for usage examples.
           </p>
           
-          <p><strong>Example interleaved sequence:</strong></p>
-          <pre style="background-color: #f5f5f5; padding: 1em; overflow-x: auto; font-size: 0.85em; border-radius: 4px;"><code>&lt;|begin_of_text|&gt;&lt;|audio_start|&gt;ﶮ𑅆𐄋𐨫𑊚﵄𐅔𑌳𑨸𐰆𐹴𑿘𐰆𑀫𑨸𐛈𑌹𑿘說𐐫𑌳𐅔覆𐰩𑗖勒𐎜𐰥𑵿ￄ𑇗ｖ𐎃𐕀𑒈𑴅𐮍𑗗﹥𐊾𐭫𐲧𑜃𑤀隷ﱭ𑧄簾𐎧𐺝𑀭𐪋𑛂ﴯ𐆠𐭮𑚖﹃𐘿𑇭𑱼﷿𐀈𐠌𑂅怒𐬊𑙐𑨗ﵳ𐇢𐾉𑛈𑤝ﵳ𐔵𐚭ﳫ𐫗𑚷𑱻酪𐑍𑌬𑤑ｻ𐒧𑊛句𐏏𑛂ﰉ𐝀𑰘𐓑𐭘𑰅ﵵ𐜞𐿪𑑂﹃𐰯𑇐ﻝ𐰙𑊔𑰡ﱠ𐄼𐾉𑄓𑰦陼𐔱𐤖𑜃ﾟ𑲮索𐊃𑐆ﰭ𐙯𑨏賂𐂗𐧯𑌐ﮅ𑫗；𐌿𑀴𑊃𑩽稜𐎆𐇶𑤱ﴂ𐞮𑘠ﾱ𐫌𑒬ﹽ𑝅𑱖籠𑤑聾𐛣𐧭𑋷稜ﻫ𑙑𐒅𐦖𑚔﮳𐂜𑍢𑱦９𐴷𐛲𑐨；𐞅𐦯𑈨𑰽９𑂷︘𐞢𐡝𑆤𑠏ﯛ𐎫𑋪𑴗︷𐚍𑋂韛𐌵𐮀ﲹ𐾷𑜴𑰫ﺕ𐒱𐩆𑇣𑶩𐒱𐋹𑊥﮺𑒛ￜ𐀨𐤒𑫳ﾨ𐂑𐲚𑈈ｘ𐎷𑐛𑨶𐹮𑆮𑪸ﶓ𑘁𑵓變𐞐𐪑𑑟ﮎ𐎶摒𐎲𐧞𑓖𑵱諸𐄋𑌹諸𐄋𐣣𑿘﵄𐇡𐰫𑌳ﶪ𐛈𐧞𑆬虜𑤓&lt;|audio_end|&gt;&lt;|text_start|&gt;I've also been taught to understand and produce paralinguistic things like sighing, chuckling, or yawning&lt;|text_end|&gt;&lt;|end_of_text|&gt;</code></pre>
+          <p><strong>Audio Example:</strong></p>
+          <audio controls>
+            <source src="./static/audio/example1.wav" type="audio/wav">
+            Your browser does not support the audio element.
+          </audio>
+          
+          <p style="margin-top: 1.5rem;">
+            <strong>Audio string:</strong> (corresponding to the audio above) using 
+            <a href="#" onclick="document.getElementById('encode-details').open = !document.getElementById('encode-details').open; return false;" style="text-decoration: underline;">encode (wav to string)</a> and 
+            <a href="#" onclick="document.getElementById('decode-details').open = !document.getElementById('decode-details').open; return false;" style="text-decoration: underline;">decode (string to wav)</a>
+          </p>
+          <pre style="background-color: #f5f5f5; padding: 3pt; overflow-x: auto; font-size: 0.85em; border-radius: 4px; margin-top: 0;"><code>I WILL ADD THIS MANUALLY</code></pre>
+          
+          <details id="encode-details" style="margin-top: 1em;">
+            <summary style="cursor: pointer; font-weight: bold;">Show encode (wav to string) code</summary>
+            <pre style="background-color: #f5f5f5; padding: 3pt; overflow-x: auto; font-size: 0.85em; border-radius: 4px; margin-top: 0.5em;"><code class="language-python">UNICODE_OFFSET: int = 0xE000
+NUM_CODEBOOKS: int = 8
+CODEBOOK_SIZE: int = 2048
+
+def codes_to_chars(
+    codes: Union[List[List[int]], np.ndarray, torch.Tensor], 
+    codebook_size: int,
+    copy_before_conversion: bool = True,
+    unicode_offset: int = UNICODE_OFFSET,
+) -> str:
+    if isinstance(codes, list):
+        codes = np.array(codes)
+        copy_before_conversion = False
+    elif isinstance(codes, torch.Tensor):
+        codes = codes.cpu().numpy()
+    if len(codes.shape) != 2:
+        raise ValueError("codes must be a 2D array of shape (num_codebooks, seq_length).")
+    if copy_before_conversion:
+        codes = codes.copy()
+    for i in range(codes.shape[0]):
+        codes[i] += unicode_offset + i*codebook_size
+    codes = codes.T.reshape(-1)
+    chars = "".join([chr(c) for c in codes])
+    return chars
+
+def audio_to_str(audio_numpy: np.ndarray, mimi_model: MimiModel, device: str) -> str:
+    audio_tensor = torch.tensor(audio_numpy).to(device).unsqueeze(0)
+    if len(audio_tensor.shape) == 2:
+        audio_tensor = audio_tensor.unsqueeze(1)
+    with torch.no_grad():
+        audio_codes = mimi_model.encode(audio_tensor)
+    codes = audio_codes[0][0].cpu()
+    codes = codes[:NUM_CODEBOOKS, :]
+    audio_str = codes_to_chars(codes, codebook_size=CODEBOOK_SIZE)
+    return audio_str</code></pre>
+          </details>
+          
+          <details id="decode-details" style="margin-top: 0.5em;">
+            <summary style="cursor: pointer; font-weight: bold;">Show decode (string to wav) code</summary>
+            <pre style="background-color: #f5f5f5; padding: 3pt; overflow-x: auto; font-size: 0.85em; border-radius: 4px; margin-top: 0.5em;"><code class="language-python">UNICODE_OFFSET: int = 0xE000
+NUM_CODEBOOKS: int = 8
+CODEBOOK_SIZE: int = 2048
+
+def chars_to_codes(
+    chars: str, 
+    num_codebooks: int,
+    codebook_size: int,
+    return_tensors: Optional[str] = None, 
+    unicode_offset: int = UNICODE_OFFSET,
+) -> Union[List[List[int]], np.ndarray, torch.Tensor]:
+    codes = np.array([ord(c) for c in chars])
+    codes = codes.reshape(-1, num_codebooks).T
+    for i in range(codes.shape[0]):
+        codes[i] -= unicode_offset + i*codebook_size
+    if return_tensors is None:
+        codes = codes.tolist()
+    elif return_tensors == "pt":
+        codes = torch.tensor(codes)
+    return codes
+
+def str_to_audio(audio_str: str, mimi_model: MimiModel, device: str) -> np.ndarray:
+    codes = chars_to_codes(
+        audio_str, num_codebooks=NUM_CODEBOOKS, codebook_size=CODEBOOK_SIZE, return_tensors="pt"
+    )
+    codes = codes.to(device).unsqueeze(0)
+    with torch.no_grad():
+        audio_decoded = mimi_model.decode(codes).audio_values[0]
+    return audio_decoded.cpu().numpy()</code></pre>
+          </details>
         </div>
 
         <!-- SODA-preliminary -->
         <div class="content has-text-justified">
           <h2 id="soda-prelim">SODA-preliminary</h2>
           
-          <h3 id="prelim-setup">Hypothesis & Setup</h3>
+          <h3 id="prelim-hypothesis">Hypothesis</h3>
           <p>
             Goal: To test if pre-training on sequences with interleaved discrete text and audio tokens will result in a model 
             that can perform reasonable audio tasks (e.g., ASR, zero-shot TTS, speech/audio continuation).
           </p>
-          
+
+          <h3 id="prelim-setup">Setup</h3>
           <p><strong>Model Configuration:</strong></p>
           <ul>
             <li><strong>Model Size:</strong> 0.6B parameters 
@@ -168,7 +302,7 @@
 
           <p>
             <strong>Link:</strong> 
-            <a href="https://wandb.ai/marin-community/marin/runs/exp1699_marin_yodas2-b5edae/">WandB Report</a> 
+            <a href="https://wandb.ai/marin-community/marin/runs/exp1699_marin_yodas2-b5edae/">WandB Log</a> 
             <!-- |  -->
             <!-- <a href="https://marin.community/data-browser/view/?paths=%5B%22gs%3A%2F%2Fmarin-us-central1%2Fexperiments%2Fexp1699_marin_yodas2-9a5778.json%22%5D">Data Browser</a> -->
           </p>
@@ -249,15 +383,15 @@
             <p class="help">SpiritLM TTS estimated from reported results on another dataset. ∅ indicates no skills. ASR: LibriSpeech (test-clean), TTS: seed-tts-eval.</p>
           </div>
 
-          <p><strong>Key Findings:</strong></p>
-          <ul>
+          <h3 id="prelim-findings">Findings</h3>
+          <ol>
             <li>For speech-only, the model is okay for acoustic tasks (e.g., on Salmon, it's already doing better than SpiritLM).</li>
             <li>For semantic knowledge as well as text knowledge, the model is bad (25% on MMLU, near 50% on sBLIMP).</li>
             <li>For cross-modal tasks like ASR and TTS, the model is okay.</li>
-            <li>The model has some in-context learning ability. For ASR, zero-shot WER↓ = 22% while 2-shot WER↓=15.2%. However, when I tried on other tasks like speech translation (speech-to-text) and speech gender classification, the model cannot do these tasks meaningfully.</li>
-          </ul>
+            <li>The model may have some in-context learning ability. For ASR, zero-shot WER↓ = 22% while 2-shot WER↓=15.2%.</li>
+            <li>When testing on tasks like speech translation (speech-to-text), speech gender classification, the model cannot do these tasks meaningfully, suggesting limited emergent abilities yet for this training.</li>
+          </ol>
 
-          <h3 id="prelim-findings">Findings</h3>
           <p>
             <strong>MMLU Score:</strong> We observed a low MMLU score of 25.0%. Initially, this raised questions, but further analysis suggests this is expected behavior for this scale.
             A 0.6B model trained primarily on noisy transcripts (where text density is low, ~3 tokens/sec vs 100 audio tokens/sec) effectively has very little "textbook quality" data exposure. In other LLM pre-training, even 1B pure text models often hover around 25% on MMLU (barely clearing random chance). 
@@ -268,9 +402,9 @@
             <strong>Next Steps:</strong> The lack of semantic/text knowledge hurts emergent abilities. To address this, future experiments will prioritize:
           </p>
           <ol>
-            <li><strong>Better Data:</strong> Swapping Yodas2 for <a href="https://www.openslr.org/94/">MLS</a> (audiobooks with cleaner text) during cooldown.</li>
-            <li><strong>Text Mixing:</strong> Explicitly mixing pure text-only data during pre-training.</li>
-            <li><strong>Warm-starting:</strong> Initializing from text-only trained weights to bootstrap semantic knowledge.</li>
+            <li><strong>Better Data:</strong> Swapping Yodas2 for other data mixtures during cooldown (SODA-prelim Annealing).</li>
+            <li><strong>Text Mixing:</strong> Explicitly mixing pure text-only data during pre-training (Nemotron Mixture).</li>
+            <li><strong>Warm-starting:</strong> Initializing from text-only trained weights to bootstrap semantic knowledge (Warm-start vs Cold-start).</li>
           </ol>
           
           <p>
@@ -292,7 +426,7 @@
             <strong>Question:</strong> Can we use cheaper methods—specifically <em>annealing</em> (switching data during the learning rate decay phase) or <em>small-scale proxies</em>—to reliably predict the best data source?
           </p>
 
-          <h3 id="annealing-setup">Methodology</h3>
+          <h3 id="annealing-setup">Setup</h3>
           <p>We compared three English-only subsets using two efficient proxies:</p>
           <ul>
             <li>
@@ -428,6 +562,755 @@
           <p>
             <strong>Decision:</strong> We will exclude MLS and use a mixture of <strong>Yodas + Emilia</strong> for the next phase.
           </p>
+        </div>
+
+        <!-- Nemotron Mixture -->
+        <div class="content has-text-justified">
+          <h2 id="nemotron">Nemotron Mixture</h2>
+          
+          <h3 id="nemotron-goal">Goal & Motivation</h3>
+          <p>
+            SODA-prelim showed poor semantic understanding and general knowledge (25% MMLU, ~50% sBLIMP). 
+            Can we boost these capabilities by including high-quality text-only data (Nemotron) during pre-training, in addition to noisy speech transcripts? 
+            If so, what is the optimal text-to-speech ratio?
+          </p>
+
+          <h3 id="nemotron-setup">Setup</h3>
+          <p>
+            Since small-scale runs (150M, 10B tokens) yielded similar findings to expensive annealing in the previous experiment, 
+            we adopt the same setup for this text ratio sweep. We vary the Nemotron text ratio from 0% to 90%, 
+            where X% text means sampling X% tokens from Nemotron and (100−X)% from Yodas.
+          </p>
+          <ul>
+            <li><strong>Model:</strong> 150M parameters</li>
+            <li><strong>Budget:</strong> 10B tokens (~10 hours on v5p-8)</li>
+            <li><strong>Text data:</strong> Nemotron (high-quality curated text)</li>
+            <li><strong>Speech data:</strong> Yodas (English)</li>
+            <li><strong>Ratios tested:</strong> 0%, 2.5%, 5%, 7.5%, 10%, 20%, 30%, 40%, 50%, 60%, 70%, 80%, 90%</li>
+          </ul>
+          <p>
+            <strong>Link:</strong> <a href="https://wandb.ai/potsawee/marin/groups/Nemotron-Sweep-150M/workspace">WandB Log</a>
+          </p>
+
+          <h3 id="nemotron-results">Results</h3>
+          <p>
+            Figure below shows the impact of adding Nemotron text data on NLL for audio and text validation data:
+          </p>
+          <figure style="text-align: center; margin: 1.5em 0;">
+            <img src="./static/images/nemotron_sweep.png" alt="Impact of Nemotron text ratio on audio and text NLL" style="max-width: 100%;">
+            <figcaption style="font-size: 0.85em; color: #666; margin-top: 0.5em;">Impact of adding Nemotron on NLL for audio and text validation data.</figcaption>
+          </figure>
+
+          <details id="nemotron-full-results" style="margin-top: 1em;">
+            <summary style="cursor: pointer; font-weight: bold;">Show full results across all metrics</summary>
+            <figure style="text-align: center; margin: 1.5em 0;">
+              <img src="./static/images/nemotron_sweep_appendix.png" alt="Full Nemotron sweep results across all metrics" style="max-width: 100%;">
+              <figcaption style="font-size: 0.85em; color: #666; margin-top: 0.5em;">Full results of text-injection ratio sweep (0%–90% Nemotron). 
+                <span style="color: green;">Green</span> (Text Knowledge: tWUGGY, tBLIMP, HellaSwag) improves monotonically. 
+                <span style="color: orange;">Orange</span> (Semantic/Acoustic: sWUGGY, sBLIMP, Salmon) shows little variation. 
+                <span style="color: red;">Red</span> (Cross-Modal: ASR, TTS) degrades beyond ~5% text.
+              </figcaption>
+            </figure>
+          </details>
+
+          <h3 id="nemotron-findings">Findings</h3>
+          <ol>
+            <li><strong>Text knowledge improves significantly:</strong> Even a small amount of text (0% → 2.5%) causes a drastic drop in NLL<sub>text</sub>, with continued improvement as text ratio increases. tWUGGY, tBLIMP, and HellaSwag all improve monotonically.</li>
+            <li><strong>Semantic/acoustic speech is unaffected:</strong> sWUGGY, sBLIMP, and Salmon show little variation across text ratios—these capabilities are robust to text inclusion.</li>
+            <li><strong>Cross-modal skills degrade beyond 5%:</strong> ASR and TTS plateau up to ~5% text but start degrading beyond this point.</li>
+            <li><strong>5% is optimal:</strong> At 5% text, we get significant text knowledge gains with little to no degradation in audio performance. Practitioners prioritizing text/reasoning may increase this ratio at the cost of audio skills.</li>
+          </ol>
+          <p>
+            <strong>Decision:</strong> We fix the pre-training mixture to <strong>5% Text (Nemotron) + 95% Speech (Yodas/Emilia)</strong> for all subsequent experiments.
+          </p>
+        </div>
+
+        <!-- IsoFLOP Study -->
+        <div class="content has-text-justified">
+          <h2 id="isoflop">IsoFLOP Study</h2>
+          
+          <h3 id="isoflop-goal">Goal & Motivation</h3>
+          <p>
+            Scaling laws for text LLMs are well-studied (Kaplan et al., Chinchilla, Llama3, DeepSeek), 
+            yet no such analysis exists for discrete audio models. 
+            Since audio tokens are far more granular (~100 tokens/sec with 8-codebook Mimi) 
+            compared to text (~3–4 tokens/sec), the optimal allocation between model size and training data may differ significantly.
+            We conduct the first scaling law study for discrete audio models to answer:
+          </p>
+          <ul>
+            <li>How should we allocate compute between model size (N) and training data (D)?</li>
+            <li>Does the optimal point shift towards more tokens (smaller models trained longer) or larger models (trained shorter) compared to text?</li>
+            <li>What is the optimal token-to-parameter ratio?</li>
+          </ul>
+
+          <h3 id="isoflop-setup">Setup</h3>
+          <p>
+            We conduct an IsoFLOP sweep training <strong>64 models</strong> across <strong>seven compute budgets</strong> 
+            spanning two orders of magnitude from 3×10<sup>18</sup> to 3×10<sup>20</sup> FLOPs.
+            For each compute budget C, we train models of varying sizes (77M to 4.2B parameters), 
+            adjusting the number of training tokens D to satisfy C ≈ 6ND.
+            At each budget, we identify the configuration achieving the lowest validation loss, yielding optimal pairs (N*, D*).
+          </p>
+          <ul>
+            <li><strong>Models trained:</strong> 64 configurations total</li>
+            <li><strong>Compute range:</strong> 3×10<sup>18</sup> to 3×10<sup>20</sup> FLOPs</li>
+            <li><strong>Model sizes:</strong> 77M to 4.2B parameters</li>
+            <li><strong>Data:</strong> 5% Nemotron + 95% Yodas/Emilia (as determined previously)</li>
+            <li><strong>Config:</strong> <a href="https://github.com/marin-community/marin/blob/main/experiments/isoflop_sweep.py">isoflop_sweep.py</a></li>
+          </ul>
+
+          <h3 id="isoflop-results">Results</h3>
+          <p>
+            The three panels below show: (a) validation NLL vs model size N, (b) validation NLL vs training tokens D, 
+            and (c) the fitted scaling laws with extrapolation.
+          </p>
+          <div style="display: flex; gap: 4px; align-items: flex-start;">
+            <div style="width: 30.5%; flex-shrink: 0;">
+              <figure style="text-align: center; margin: 0;">
+                <img src="./static/images/isoflop_sweep_loss_vs_N.png" alt="Validation NLL vs model size N" style="width: 100%;">
+                <figcaption style="font-size: 0.85em; color: #666; margin-top: 0.5em;">(a) Validation NLL vs model size N</figcaption>
+              </figure>
+            </div>
+            <div style="width: 30.5%; flex-shrink: 0;">
+              <figure style="text-align: center; margin: 0;">
+                <img src="./static/images/isoflop_sweep_loss_vs_D.png" alt="Validation NLL vs training tokens D" style="width: 100%;">
+                <figcaption style="font-size: 0.85em; color: #666; margin-top: 0.5em;">(b) Validation NLL vs training tokens D</figcaption>
+              </figure>
+            </div>
+            <div style="width: 37.2%; flex-shrink: 0;">
+              <figure style="text-align: center; margin: 0;">
+                <img src="./static/images/isoflop_scaling_law_extrapolation.png" alt="Optimal N* and D* vs compute budget C" style="width: 100%;">
+                <figcaption style="font-size: 0.85em; color: #666; margin-top: 0.5em;">(c) Optimal N* and D* vs compute C</figcaption>
+              </figure>
+            </div>
+          </div>
+
+          <h3 id="isoflop-findings">Findings</h3>
+          <p>
+            We fit power-laws N* = a<sub>N</sub> C<sup>b<sub>N</sub></sup> and D* = a<sub>D</sub> C<sup>b<sub>D</sub></sup> using log-linear regression to derive scaling laws for discrete audio:
+          </p>
+          <div style="background-color: #f5f5f5; padding: 1em; font-size: 1.1em; border-radius: 4px; text-align: center; font-family: 'Noto Sans', sans-serif;">
+            <strong>N*</strong> &prop; C<sup>0.367</sup> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>D*</strong> &prop; C<sup>0.579</sup>
+          </div>
+          
+          <ol>
+            <li>
+              <strong>Data scales faster than model size:</strong> 
+              The optimal token count D* scales significantly faster than model size N* (0.579 vs 0.367). 
+              This means training data should grow approximately 1.6× faster than model parameters as compute budget increases.
+            </li>
+            <li>
+              <strong>Consistent with low information density:</strong> 
+              These exponents differ from Chinchilla's balanced scaling (N*, D* ∝ C<sup>0.5</sup>), but align with recent text LLM findings: 
+              Llama3 reports a data exponent of 0.53, and DeepSeek finds 0.42–0.55 depending on data quality. 
+              DeepSeek interprets higher data exponents as indicative of lower information density. 
+              Our exponent (D* ∝ C<sup>0.579</sup>) fits this interpretation—discrete audio at 100 tokens/sec carries less information per token than text.
+            </li>
+            <li>
+              <strong>Token-to-parameter ratio increases with scale:</strong> 
+              Unlike Chinchilla's constant ratio of ~20 tokens/parameter, 
+              the asymmetry implies the optimal ratio <em>increases</em> with scale: 
+              ~13 tokens/parameter at 10<sup>20</sup> FLOPs, rising to ~58 tokens/parameter at 10<sup>23</sup> FLOPs. 
+              This is qualitatively different from text models, where a replication attempt (Besiroglu et al.) found the ratio actually <em>decreases</em> with compute.
+            </li>
+          </ol>
+          
+          <details id="isoflop-parametric" style="margin-top: 1em;">
+            <summary style="cursor: pointer; font-weight: bold;">Show alternative parametric fit approach</summary>
+            <p style="margin-top: 0.5em;">
+              An alternative approach fits a parametric equation L = E + A/N<sup>α</sup> + B/D<sup>β</sup> on all data points 
+              and derives exponents as N* ∝ C<sup>β/(α+β)</sup> and D* ∝ C<sup>α/(α+β)</sup>. This yields similar findings:
+            </p>
+            <figure style="text-align: center; margin: 1em 0;">
+              <img src="./static/images/isoflop_parametric_fit_comparison.png" alt="Parametric fit comparison" style="max-width: 80%;">
+              <figcaption style="font-size: 0.85em; color: #666; margin-top: 0.5em;">Comparison of IsoFLOP approach vs parametric fit approach.</figcaption>
+            </figure>
+          </details>
+        </div>
+
+        <!-- Correlation between Loss and Downstream Metrics -->
+        <div class="content has-text-justified">
+          <h2 id="nll-correlation">Correlation between Loss and Metrics</h2>
+          
+          <h3 id="nll-goal">Goal & Motivation</h3>
+          <p>
+            Before relying on validation loss (NLL) to guide scaling law analysis and future experiments, 
+            we need to verify: <em>Is validation NLL a reliable proxy for downstream task performance in discrete audio models?</em> 
+            If so, we can focus on minimizing NLL rather than running expensive downstream evaluations at every step.
+          </p>
+
+          <h3 id="nll-setup">Setup</h3>
+          <p>
+            We compute NLL on speech utterances from LibriSpeech dev-clean and analyze the correlation between NLL and 
+            downstream task performance across the 64 models from our IsoFLOP study (varying sizes and compute budgets).
+          </p>
+          <p>
+            Our interleaved format admits multiple ways to compute NLL. We compare six variants:
+          </p>
+          <ol>
+            <li><strong>NLL_1:</strong> All tokens from audio+text data</li>
+            <li><strong>NLL_2:</strong> All audio tokens from text+audio data</li>
+            <li><strong>NLL_3:</strong> Semantic tokens from text+audio data</li>
+            <li><strong>NLL_4:</strong> Audio tokens from audio-only data</li>
+            <li><strong>NLL_5:</strong> Text tokens from audio+text data</li>
+            <li><strong>NLL_6:</strong> Text tokens from text-only data</li>
+          </ol>
+
+          <h3 id="nll-results">Results</h3>
+          <p>
+            The figure below shows validation NLL (audio+text) versus downstream task performance. 
+            Circular points are the 64 IsoFLOP models; star-shaped points are the final SODA runs at larger scale. 
+            Regression lines are fitted on the 64 IsoFLOP models only.
+          </p>
+          <figure style="text-align: center; margin: 1.5em 0;">
+            <img src="./static/images/nll_correlation.png" alt="NLL vs downstream task performance" style="max-width: 100%;">
+            <figcaption style="font-size: 0.85em; color: #666; margin-top: 0.5em;">Validation NLL (audio+text) vs downstream task performance. Circular: 64 IsoFLOP models. Stars: final SODA runs. Regression lines fitted on IsoFLOP models only.</figcaption>
+          </figure>
+
+          <details id="nll-full-results-figures" style="margin-top: 1em;">
+            <summary style="cursor: pointer; font-weight: bold;">Show full results across all NLL variants (Figures)</summary>
+            <figure style="text-align: center; margin: 1em 0;">
+              <img src="./static/images/nll_correlation_full1.png" alt="NLL correlation full results part 1" style="max-width: 100%;">
+              <figcaption style="font-size: 0.85em; color: #666; margin-top: 0.5em;">Part 1: Cross-modal metrics (ASR, TTS) across NLL variants. Spearman ρ reported per subplot.</figcaption>
+            </figure>
+            <figure style="text-align: center; margin: 1em 0;">
+              <img src="./static/images/nll_correlation_full2.png" alt="NLL correlation full results part 2" style="max-width: 100%;">
+              <figcaption style="font-size: 0.85em; color: #666; margin-top: 0.5em;">Part 2: Speech understanding and text knowledge metrics across NLL variants.</figcaption>
+            </figure>
+          </details>
+
+          <details id="nll-metric-comparison" style="margin-top: 1em;">
+            <summary style="cursor: pointer; font-weight: bold;">Show NLL metric comparison table (Spearman correlations)</summary>
+            <div class="table-container" style="margin-top: 1rem;">
+              <table class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth" style="font-size: 0.85em;">
+                <thead>
+                  <tr>
+                    <th>NLL</th>
+                    <th>ASR-0</th>
+                    <th>ASR-2</th>
+                    <th>TTS-W</th>
+                    <th>TTS-S</th>
+                    <th>Sal.</th>
+                    <th>sWUG</th>
+                    <th>sBLI</th>
+                    <th>tWUG</th>
+                    <th>tBLI</th>
+                    <th>Hella</th>
+                    <th>Avg-Sp</th>
+                    <th>Avg-Tx</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>NLL_1</strong></td>
+                    <td>0.959</td><td>0.967</td><td>0.955</td><td>0.989</td><td>0.841</td><td>0.941</td><td>0.614</td><td>0.879</td><td>0.824</td><td>0.887</td><td>0.895</td><td>0.864</td>
+                  </tr>
+                  <tr>
+                    <td>NLL_2</td>
+                    <td>0.956</td><td>0.962</td><td>0.953</td><td>0.986</td><td>0.842</td><td>0.936</td><td>0.621</td><td>0.874</td><td>0.821</td><td>0.887</td><td>0.894</td><td>0.861</td>
+                  </tr>
+                  <tr>
+                    <td>NLL_3</td>
+                    <td>0.954</td><td>0.959</td><td>0.952</td><td>0.985</td><td>0.842</td><td>0.929</td><td>0.620</td><td>0.866</td><td>0.819</td><td>0.884</td><td>0.892</td><td>0.856</td>
+                  </tr>
+                  <tr>
+                    <td>NLL_4</td>
+                    <td>0.959</td><td>0.965</td><td>0.952</td><td>0.987</td><td>0.845</td><td>0.937</td><td>0.623</td><td>0.871</td><td>0.819</td><td>0.886</td><td>0.896</td><td>0.859</td>
+                  </tr>
+                  <tr>
+                    <td>NLL_5</td>
+                    <td>0.962</td><td>0.961</td><td>0.960</td><td>0.986</td><td>0.820</td><td>0.944</td><td>0.602</td><td>0.899</td><td>0.827</td><td>0.904</td><td>0.891</td><td>0.877</td>
+                  </tr>
+                  <tr>
+                    <td>NLL_6</td>
+                    <td>0.903</td><td>0.908</td><td>0.933</td><td>0.949</td><td>0.802</td><td>0.892</td><td>0.552</td><td>0.891</td><td>0.873</td><td>0.917</td><td>0.848</td><td>0.894</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="help">Avg-Sp averages 7 speech metrics; Avg-Tx averages 3 text metrics. NLL_1 achieves the best balance between speech and text correlations.</p>
+          </details>
+
+          <h3 id="nll-findings">Findings</h3>
+          <ol>
+            <li>
+              <strong>Cross-modal skills (ASR, TTS):</strong> 
+              NLL is highly predictive of both ASR (ρ ≈ 0.95) and TTS quality (TTS-WER: ρ ≈ 0.96, TTS-SIM: ρ = 0.99 with near-linear improvement). 
+              However, at lower loss values, improvement slows—most results from the highest compute budget (3×10<sup>20</sup> FLOPs) fall below the regression line.
+            </li>
+            <li>
+              <strong>Semantic/acoustic understanding (Salmon, sBLIMP, sWUGGY):</strong> 
+              Improvement is slow: as NLL decreases from 4.0 to 3.4, Salmon improves from 68.5% to 70.5% and sWUGGY from 54% to 58%. 
+              Salmon shows early signs of saturation at the highest compute budget. 
+              sBLIMP remains near pre-emergence (49.3% to 50.0%, near the 50% random baseline).
+            </li>
+            <li>
+              <strong>Text knowledge (tBLIMP, tWUGGY, HellaSwag):</strong> 
+              NLL correlates strongly (ρ > 0.8) and improvement is more pronounced: 
+              tWUGGY improves from 62% to 69% and tBLIMP from 64% to 70% as NLL drops from 4.0 to 3.4. 
+              HellaSwag (ρ = 0.89) shows an emergence pattern: no improvement from NLL 4.0 to 3.6, then rapid increase from 25% to 32%.
+            </li>
+            <li>
+              <strong>Choice of NLL metric:</strong> 
+              All NLL variants show similar correlations with downstream tasks. 
+              We select <strong>NLL on all tokens from audio+text data (NLL_1)</strong> as the primary metric 
+              because it achieves the best balance between speech (Avg-Sp = 0.895) and text (Avg-Tx = 0.864) correlations.
+            </li>
+            <li>
+              <strong>Extrapolation holds at scale:</strong> 
+              The final SODA runs (trained at higher compute budgets) largely follow the extrapolated regression lines, 
+              confirming NLL as a reliable proxy even beyond the IsoFLOP regime.
+            </li>
+          </ol>
+        </div>
+
+        <!-- SODA-LongRun -->
+        <div class="content has-text-justified">
+          <h2 id="longrun">SODA-LongRun</h2>
+          
+          <h3 id="longrun-goal">Goal & Motivation</h3>
+          <p>
+            This is the culmination of all previous experiments. Having established (1) the optimal speech data mixture (Yodas + Emilia), 
+            (2) the optimal text ratio (5% Nemotron), (3) scaling laws for discrete audio, and (4) NLL as a reliable proxy metric, 
+            we now scale up to train the final <strong>SODA</strong> (<strong>S</strong>caling <strong>O</strong>pen <strong>D</strong>iscrete <strong>A</strong>udio) models 
+            ranging from 135M to 4B parameters. The key questions are:
+          </p>
+          <ul>
+            <li>Do our design choices from earlier experiments generalize to larger scale?</li>
+            <li>Does performance improve with scale across all capability types?</li>
+            <li>How does SODA compare to existing spoken language models?</li>
+          </ul>
+
+          <h3 id="longrun-setup">Setup & Over-Training</h3>
+          <p>
+            <strong>Training data:</strong> Following our recipe — 5% Nemotron (text-only) + 43.4% Emilia + 51.6% Yodas2 
+            (ratio between Emilia and Yodas determined by their respective sizes). 
+            This yields ~125B + 125B = 250B tokens of interleaved speech data (audio-first and text-first formats), 
+            for a total of <strong>500B tokens</strong> (~4 epochs). Prior work shows repeated data remains effective up to 4 epochs for LLM pre-training.
+          </p>
+          <p>
+            <strong>Model sizes and over-training:</strong> We train models at 135M, 600M, 1.7B, and 4B parameters, all on 500B tokens. 
+            While our scaling laws define compute-optimal token counts, inference usage favors models trained beyond D* — 
+            especially given that our 100 tokens/sec rate can make larger models slow at inference.
+          </p>
+          <div class="table-container">
+            <table class="table is-bordered is-narrow is-hoverable" style="font-size: 0.9em; max-width: 700px; margin: 0 auto;">
+              <thead>
+                <tr>
+                  <th>Model</th>
+                  <th>Parameters</th>
+                  <th>Tokens</th>
+                  <th>Over-training factor</th>
+                  <th>Comparable to</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>SODA-135M</td>
+                  <td>135M</td>
+                  <td>500B</td>
+                  <td>~940×</td>
+                  <td>—</td>
+                </tr>
+                <tr>
+                  <td>SODA-600M</td>
+                  <td>600M</td>
+                  <td>500B</td>
+                  <td>~90×</td>
+                  <td>Llama3</td>
+                </tr>
+                <tr>
+                  <td>SODA-1.7B</td>
+                  <td>1.7B</td>
+                  <td>500B</td>
+                  <td>~18×</td>
+                  <td>Llama2</td>
+                </tr>
+                <tr>
+                  <td>SODA-4B</td>
+                  <td>4B</td>
+                  <td>500B</td>
+                  <td>~4.5×</td>
+                  <td>Near compute-optimal</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p style="margin-top: 0.75em;">
+            Training the 4B model on 500B tokens reaches 1.3×10<sup>22</sup> FLOPs (~1 week on v5p-256 TPU).
+          </p>
+          <p>
+            <strong>Link:</strong> <a href="https://wandb.ai/potsawee/marin/groups/Marin-Audio-Longrun/workspace">WandB Log</a>
+          </p>
+
+          <h3 id="longrun-results">Results</h3>
+
+          <p>
+            Main comparison table — SODA against existing spoken language models. 
+            SODA is the only model with capabilities across <em>all</em> skills, serving as a unified backbone.
+          </p>
+          <div class="table-container">
+            <table class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth" style="font-size: 0.85em;">
+              <thead>
+                <tr>
+                  <th rowspan="2">Model</th>
+                  <th colspan="2" style="text-align: center;">Speech<br>(Semantic)</th>
+                  <th style="text-align: center;">Speech<br>(Acoustic)</th>
+                  <th colspan="3" style="text-align: center;">Text<br>(Knowledge)</th>
+                  <th colspan="3" style="text-align: center;">Cross-Modal</th>
+                </tr>
+                <tr>
+                  <th>sBLIMP↑</th>
+                  <th>sWUGGY↑</th>
+                  <th>Salmon↑</th>
+                  <th>tBLIMP↑</th>
+                  <th>tWUGGY↑</th>
+                  <th>HellaS↑</th>
+                  <th>ASR↓</th>
+                  <th>TTS<sub>WER</sub>↓</th>
+                  <th>TTS<sub>SIM</sub>↑</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="background-color: #f5f5f5;">
+                  <td colspan="10"><strong>Existing Models</strong></td>
+                </tr>
+                <tr>
+                  <td>TWIST-7B</td>
+                  <td>59.0</td><td>73.9</td><td>61.6</td>
+                  <td>×</td><td>×</td><td>×</td>
+                  <td>×</td><td>×</td><td>×</td>
+                </tr>
+                <tr>
+                  <td>SpiritLM-base-7B</td>
+                  <td>58.3</td><td>69.0</td><td>57.2</td>
+                  <td>73.3</td><td>80.3</td><td>—</td>
+                  <td>~22†</td><td>~40†</td><td>~0.05‡</td>
+                </tr>
+                <tr>
+                  <td>SpiritLM-Expr-7B</td>
+                  <td>54.2</td><td>65.0</td><td>67.1</td>
+                  <td>73.6</td><td>75.8</td><td>—</td>
+                  <td>~38†</td><td>~50†</td><td>~0.10‡</td>
+                </tr>
+                <tr>
+                  <td>Llama-Mimi-1.3B</td>
+                  <td>54.3</td><td>68.7</td><td>73.6</td>
+                  <td>×</td><td>×</td><td>×</td>
+                  <td>×</td><td>×</td><td>×</td>
+                </tr>
+                <tr>
+                  <td>Llama-Mimi-8B</td>
+                  <td>55.1</td><td>68.8</td><td>73.2</td>
+                  <td>×</td><td>×</td><td>×</td>
+                  <td>×</td><td>×</td><td>×</td>
+                </tr>
+                <tr style="background-color: #f5f5f5;">
+                  <td colspan="10"><strong>Our Models (Preliminary)</strong></td>
+                </tr>
+                <tr>
+                  <td>SODA-prelim-600M</td>
+                  <td>50.9</td><td>57.8</td><td>69.4</td>
+                  <td>69.0</td><td>71.3</td><td>26.2</td>
+                  <td>22.0</td><td>9.2</td><td>0.516</td>
+                </tr>
+                <tr style="background-color: #f5f5f5;">
+                  <td colspan="10"><strong>SODA-LongRun (Final)</strong></td>
+                </tr>
+                <tr>
+                  <td>SODA-base-135M</td>
+                  <td>50.1</td><td>56.3</td><td>70.0</td>
+                  <td>67.4</td><td>70.7</td><td>28.7</td>
+                  <td>28.1</td><td>11.2</td><td>0.500</td>
+                </tr>
+                <tr>
+                  <td>SODA-base-600M</td>
+                  <td>51.2</td><td>58.9</td><td>70.1</td>
+                  <td>70.7</td><td>73.1</td><td>35.8</td>
+                  <td>10.2</td><td>7.6</td><td>0.555</td>
+                </tr>
+                <tr>
+                  <td>SODA-base-1.7B</td>
+                  <td>51.4</td><td>60.6</td><td>70.6</td>
+                  <td>70.3</td><td>74.7</td><td>44.5</td>
+                  <td>7.0</td><td>6.9</td><td>0.560</td>
+                </tr>
+                <tr>
+                  <td>SODA-base-4B</td>
+                  <td>52.4</td><td>61.8</td><td>70.4</td>
+                  <td>71.3</td><td>74.8</td><td>52.6</td>
+                  <td>5.0</td><td>6.1</td><td>0.560</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="help">
+            × = model lacks the capability. — = not reported (HellaSwag contamination in Llama2 pre-training which SpiritLM is based on). 
+            †SpiritLM uses 10-shot eval on LibriSpeech-clean for ASR/TTS; ours is 0-shot with TTS on seed-tts-eval. 
+            ‡TTS-SIM reproduced — semantic-only tokens cannot preserve voice.
+          </p>
+
+          <details id="longrun-scaling-validation" style="margin-top: 1em;">
+            <summary style="cursor: pointer; font-weight: bold;">Show scaling law validation with IsoFLOP predictions</summary>
+            <figure style="text-align: center; margin: 1em 0;">
+              <img src="./static/images/scaling_law_validation_with_isoflop.png" alt="Scaling law validation" style="max-width: 80%;">
+              <figcaption style="font-size: 0.85em; color: #666; margin-top: 0.5em;">Validation of scaling law predictions from IsoFLOP study against actual SODA-LongRun performance.</figcaption>
+            </figure>
+          </details>
+
+          <h3 id="longrun-findings">Findings</h3>
+
+          <h4>1. Do our design choices help?</h4>
+          <p>
+            Comparing SODA-base-600M to SODA-prelim-600M (both 600M, 500B tokens) validates that our design choices 
+            (English-only data, Yodas+Emilia mixture, 5% Nemotron) yield measurable improvements across <em>all</em> metrics:
+          </p>
+          <ul>
+            <li><strong>ASR-WER:</strong> 22.0% → 10.2% (dramatic improvement)</li>
+            <li><strong>TTS-WER:</strong> 9.2% → 7.6%</li>
+            <li><strong>TTS-SIM:</strong> 0.516 → 0.555</li>
+            <li><strong>sWUGGY:</strong> 57.8% → 58.9%</li>
+            <li><strong>tWUGGY:</strong> 71.3% → 73.1%</li>
+            <li><strong>HellaSwag:</strong> 26.2% → 35.8%</li>
+          </ul>
+
+          <h4>2. Does performance improve with scale?</h4>
+          <p>
+            We examine how downstream tasks scale, connecting to our NLL correlation analysis 
+            (see <a href="#nll-correlation">Correlation section</a> and its figures):
+          </p>
+          <ul>
+            <li>
+              <strong>Cross-modal (ASR, TTS):</strong> 
+              ASR-WER drops dramatically from 28.1% (135M) to 5.0% (4B). TTS follows a similar pattern. 
+              However, final-run points fall above the NLL regression line, indicating diminishing returns at scale — 
+              consistent with the early saturation signs we observed in the IsoFLOP correlation analysis.
+              <em>SODA makes an excellent ASR/TTS backbone.</em>
+            </li>
+            <li>
+              <strong>Acoustic understanding (Salmon):</strong> 
+              Salmon saturates around 70% across all sizes (70.0% at 135M → 70.4% at 4B). 
+              This suggests acoustic ability is bounded by tokenization and/or data quality rather than model capacity. 
+              Nevertheless, this still outperforms semantic-only models (SpiritLM: 57.2–67.1%).
+            </li>
+            <li>
+              <strong>Semantic understanding (sWUGGY, sBLIMP):</strong> 
+              Shows emergence — sWUGGY improves from 56.3% (135M) to 61.8% (4B), and sBLIMP from 50.1% to 52.4%. 
+              Final runs fall <em>above</em> the NLL regression line, suggesting accelerating gains. 
+              While still below semantic-only models like SpiritLM (likely due to content jumping between utterance chunks), 
+              the trend is encouraging.
+            </li>
+            <li>
+              <strong>Text knowledge (HellaSwag):</strong> 
+              Exhibits the <em>strongest</em> emergence — HellaSwag accuracy jumps from 28.7% (135M) to 52.6% (4B), 
+              with final-run points appearing far above the NLL regression line. 
+              This exponential gain validates the 5% Nemotron inclusion and shows the model is learning genuine text knowledge.
+            </li>
+          </ul>
+
+          <h4>3. How does SODA compare to others?</h4>
+          <ul>
+            <li>
+              <strong>vs TWIST (semantic-only, speech-only):</strong> 
+              TWIST-7B achieves strong semantic scores (sBLIMP: 59.0, sWUGGY: 73.9) but lacks text knowledge and cross-modal skills entirely. 
+              SODA trades some semantic performance for a vastly richer capability set.
+            </li>
+            <li>
+              <strong>vs SpiritLM (semantic-only, warm-started from Llama2):</strong> 
+              SpiritLM leverages Llama2's text knowledge (tWUGGY: 80.3%), but its semantic-only tokenization 
+              limits acoustic modeling (Salmon: 57.2%) and prevents voice preservation (TTS-SIM: ~0.05). 
+              SODA's multi-codebook approach enables genuine voice quality at the cost of lower semantic scores.
+            </li>
+            <li>
+              <strong>vs Llama-Mimi (semantic+acoustic, audio-only):</strong> 
+              Llama-Mimi achieves the highest Salmon (73.6%) by modeling audio-only sequences, 
+              but completely lacks cross-modal skills — no ASR, no TTS, no text knowledge. 
+              SODA's utterance-level interleaving makes it a more general-purpose foundation.
+            </li>
+          </ul>
+          <p>
+            <strong>Key takeaway:</strong> SODA is the only model with capabilities across <em>all</em> skills — 
+            speech understanding, acoustic quality, text knowledge, and cross-modal ASR/TTS — 
+            making it a unified foundation for spoken language modeling.
+          </p>
+        </div>
+
+        <!-- Warm-start vs Cold-start -->
+        <div class="content has-text-justified">
+          <h2 id="warmstart">Warm-start vs Cold-start</h2>
+          
+          <h3 id="warmstart-goal">Goal & Motivation</h3>
+          <p>
+            Many discrete audio models (e.g., TWIST, CSM, SpiritLM) initialize from pre-trained text LLMs. 
+            Does this <em>warm-start</em> strategy benefit over training from scratch (<em>cold-start</em>)? 
+            Specifically, what skills does warm-starting improve or not improve?
+          </p>
+
+          <h3 id="warmstart-setup">Setup</h3>
+          <p>
+            We compare warm-start (initialized from <strong>Qwen3-0.6B/1.7B-base</strong>) versus cold-start (random initialization) 
+            at 600M and 1.7B scales, both trained on 500B tokens (same data and recipe as SODA-LongRun).
+          </p>
+          <ul>
+            <li><strong>Cold-start:</strong> Random initialization, standard training</li>
+            <li><strong>Warm-start:</strong> Initialized from Qwen3 text LLM weights (audio token embeddings randomly initialized)</li>
+            <li><strong>Scales:</strong> 600M and 1.7B parameters</li>
+            <li><strong>Budget:</strong> 500B tokens each (~4 epochs)</li>
+          </ul>
+          <p>
+            <strong>Link:</strong> <a href="https://wandb.ai/potsawee/marin/groups/Marin-Audio-Longrun/workspace">WandB Log</a> (same group as SODA-LongRun)
+          </p>
+
+          <h3 id="warmstart-results">Results</h3>
+
+          <h4>Training Loss Stability</h4>
+          <p>
+            A key observation: warm-start exhibits <em>instability</em> with unpredictable loss spikes, 
+            while cold-start shows smooth improvement throughout.
+          </p>
+          <div style="display: flex; gap: 8px; align-items: flex-start;">
+            <div style="width: 50%; flex-shrink: 0;">
+              <figure style="text-align: center; margin: 0;">
+                <img src="./static/images/train_loss_cold.png" alt="Cold-start training loss" style="width: 100%;">
+                <figcaption style="font-size: 0.85em; color: #666; margin-top: 0.5em;">(a) Cold-start: smooth improvement</figcaption>
+              </figure>
+            </div>
+            <div style="width: 50%; flex-shrink: 0;">
+              <figure style="text-align: center; margin: 0;">
+                <img src="./static/images/train_loss_warm.png" alt="Warm-start training loss" style="width: 100%;">
+                <figcaption style="font-size: 0.85em; color: #666; margin-top: 0.5em;">(b) Warm-start: frequent spikes; 600M has one large spike at ~135K steps</figcaption>
+              </figure>
+            </div>
+          </div>
+          <p class="help" style="margin-top: 0.5em;">Note: With limited compute budget, we train only one run per configuration. Better regularization or different hyperparameters could potentially stabilize warm-start training.</p>
+
+          <h4>Training Trajectories</h4>
+          <p>
+            Full training trajectories comparing warm-start vs cold-start across all metrics:
+          </p>
+          <figure style="text-align: center; margin: 1.5em 0;">
+            <img src="./static/images/warm_cold_start_comparison.png" alt="Warm-start vs Cold-start training trajectories" style="max-width: 100%;">
+            <figcaption style="font-size: 0.85em; color: #666; margin-top: 0.5em;">
+              Warm-start vs Cold-start at 600M and 1.7B. 
+              <strong>Top row:</strong> NLL and cross-modal skills (ASR, TTS). Cold-start achieves lower ASR-WER throughout. 
+              <strong>Bottom row:</strong> Understanding tasks. Salmon and sWUGGY are similar regardless of initialization; tWUGGY shows warm-start maintaining a persistent advantage.
+            </figcaption>
+          </figure>
+
+          <h4>Final Evaluation</h4>
+          <div class="table-container">
+            <table class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth" style="font-size: 0.85em;">
+              <thead>
+                <tr>
+                  <th rowspan="2">Model</th>
+                  <th colspan="2" style="text-align: center;">Speech<br>(Semantic)</th>
+                  <th style="text-align: center;">Speech<br>(Acoustic)</th>
+                  <th colspan="3" style="text-align: center;">Text<br>(Knowledge)</th>
+                  <th colspan="3" style="text-align: center;">Cross-Modal</th>
+                </tr>
+                <tr>
+                  <th>sBLIMP↑</th>
+                  <th>sWUGGY↑</th>
+                  <th>Salmon↑</th>
+                  <th>tBLIMP↑</th>
+                  <th>tWUGGY↑</th>
+                  <th>HellaS↑</th>
+                  <th>ASR↓</th>
+                  <th>TTS<sub>WER</sub>↓</th>
+                  <th>TTS<sub>SIM</sub>↑</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="background-color: #f5f5f5;">
+                  <td colspan="10"><strong>600M Scale</strong></td>
+                </tr>
+                <tr>
+                  <td>SODA-600M (cold-start)</td>
+                  <td>51.2</td><td>58.9</td><td>70.1</td>
+                  <td>70.7</td><td>73.1</td><td>35.8</td>
+                  <td>10.2</td><td>7.6</td><td>0.555</td>
+                </tr>
+                <tr>
+                  <td>SODA-600M (warm-start)</td>
+                  <td>51.1</td><td>59.1</td><td>70.7</td>
+                  <td>70.8</td><td>77.0</td><td>36.3</td>
+                  <td>14.6</td><td>6.6</td><td>0.559</td>
+                </tr>
+                <tr style="background-color: #f5f5f5;">
+                  <td colspan="10"><strong>1.7B Scale</strong></td>
+                </tr>
+                <tr>
+                  <td>SODA-1.7B (cold-start)</td>
+                  <td>51.4</td><td>60.6</td><td>70.6</td>
+                  <td>70.3</td><td>74.7</td><td>44.5</td>
+                  <td>7.0</td><td>6.9</td><td>0.560</td>
+                </tr>
+                <tr>
+                  <td>SODA-1.7B (warm-start)</td>
+                  <td>51.8</td><td>60.3</td><td>70.3</td>
+                  <td>71.0</td><td>79.2</td><td>47.1</td>
+                  <td>17.3</td><td>6.8</td><td>0.557</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3 id="warmstart-findings">Findings</h3>
+          <ol>
+            <li>
+              <strong>Training stability:</strong> 
+              Warm-start exhibits instability with unpredictable loss spikes (including a large spike at 135K steps in the 600M run, 
+              where ASR degrades from 21% to 34%). Cold-start shows smooth improvement throughout.
+            </li>
+            <li>
+              <strong>Cross-modal skills (ASR):</strong> 
+              Cold-start outperforms warm-start on ASR from the earliest checkpoint. 
+              At 1.7B, cold-start achieves 19.7% vs 29.2% WER at 10K steps, widening to 7.0% vs 17.3% at completion. 
+              This suggests warm-start may interfere with learning audio→text mappings.
+            </li>
+            <li>
+              <strong>Cross-modal skills (TTS):</strong> 
+              Cold-start is initially better, but warm-start catches up. Both achieve comparable TTS quality at completion 
+              (~6.5–7.5% WER, ~0.56 SIM).
+            </li>
+            <li>
+              <strong>Speech understanding (Salmon, sWUGGY):</strong> 
+              Similar trajectories regardless of initialization (~70% Salmon, ~60% sWUGGY), 
+              suggesting these audio skills are learned fresh regardless of starting point. 
+              This is consistent with SpiritLM's findings (their Table 6).
+            </li>
+            <li>
+              <strong>Text knowledge (tWUGGY, HellaSwag):</strong> 
+              Warm-start begins with a substantial advantage (at 10K steps: tWUGGY 75.4% vs 69.6%, HellaSwag 40.5% vs 29.9%). 
+              Critically, cold-start <em>never</em> catches up even after 500B tokens 
+              (final tWUGGY: 74.7% vs 79.2%; HellaSwag: 44.5% vs 47.1%), 
+              indicating text knowledge from LLM pre-training is not fully recoverable through audio-centric training.
+            </li>
+          </ol>
+          <p>
+            <strong>Recommendation:</strong> We recommend <strong>cold-start</strong> as the default recipe for general audio capabilities, 
+            given the training instability and ASR degradation from warm-starting. 
+            However, for applications where complex reasoning or text knowledge is critical, 
+            the persistent text-knowledge advantage of warm-start may outweigh these downsides. 
+            A hybrid approach (cold-start pre-training followed by text-enriched fine-tuning) is an interesting future direction.
+          </p>
+        </div>
+
+        <!-- Open Questions -->
+        <div class="content has-text-justified">
+          <h2 id="open-questions">Open Questions</h2>
+          <p>
+            <em>This section is under construction. It will contain open questions and future directions for discrete audio model training.</em>
+          </p>
+          <p>
+            Placeholder for discussion of:
+          </p>
+          <ul>
+            <li>Optimal tokenization strategies for discrete audio</li>
+            <li>Scaling behaviors beyond current compute budgets</li>
+            <li>Hybrid approaches combining cold-start and warm-start</li>
+            <li>Other architectural and training considerations</li>
+          </ul>
         </div>
 
       </div>
