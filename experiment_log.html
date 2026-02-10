@@ -65,6 +65,7 @@
               <a href="#basics">Basics</a>
               <ul>
                 <li><a href="#tokenizer-building">Building Tokenizer</a></li>
+                <li><a href="#training-data">Training Data</a></li>
               </ul>
             </li>
             <li>
@@ -92,6 +93,15 @@
                 <li><a href="#nemotron-setup">Setup</a></li>
                 <li><a href="#nemotron-results">Results</a></li>
                 <li><a href="#nemotron-findings">Findings</a></li>
+              </ul>
+            </li>
+            <li>
+              <a href="#token-comp">Ablation on Token Composition</a>
+              <ul>
+                <li><a href="#token-comp-goal">Goal & Motivation</a></li>
+                <li><a href="#token-comp-setup">Setup</a></li>
+                <li><a href="#token-comp-results">Results</a></li>
+                <li><a href="#token-comp-findings">Findings</a></li>
               </ul>
             </li>
             <li>
@@ -182,10 +192,10 @@
           </p>
           
           <p>
-            <strong>Note on Implementation:</strong> We map discrete audio token indices (0–16,383) to Unicode characters in the Private Use Area (offset <code>0xE000</code>), 
+            <strong>Note on Implementation:</strong> We map discrete audio token indices (0–16383) to Unicode characters in the Private Use Area (offset <code>0xE000</code>), 
             so each audio token becomes a single character. This allows us to treat interleaved audio-text sequences as plain strings, 
-            enabling reuse of existing Marin text-LLM infrastructure and efficient storage. 
-            See <a href="https://huggingface.co/soda-research/marin-mimi-bpe-8cb-16k-tokenizer">our tokenizer page</a> for usage examples.
+            enabling use of existing Marin LLM infrastructure and efficient storage. 
+            See <a href="https://huggingface.co/soda-research/marin-mimi-bpe-8cb-16k-tokenizer">our tokenizer</a> for usage.
           </p>
           
           <p><strong>Audio Example:</strong></p>
@@ -195,11 +205,13 @@
           </audio>
           
           <p style="margin-top: 1.5rem;">
-            <strong>Audio string:</strong> (corresponding to the audio above) using 
+            <strong>Audio string:</strong> (corresponding to the audio above) using the Mimi tokenizer with 8 codebooks: 
+            <br>
+            See 
             <a href="#" onclick="document.getElementById('encode-details').open = !document.getElementById('encode-details').open; return false;" style="text-decoration: underline;">encode (wav to string)</a> and 
             <a href="#" onclick="document.getElementById('decode-details').open = !document.getElementById('decode-details').open; return false;" style="text-decoration: underline;">decode (string to wav)</a>
           </p>
-          <pre style="background-color: #f5f5f5; padding: 3pt; overflow-x: auto; font-size: 0.85em; border-radius: 4px; margin-top: 0;"><code>I WILL ADD THIS MANUALLY</code></pre>
+          <pre style="background-color: #f5f5f5; padding: 3pt; overflow-x: auto; font-size: 0.85em; border-radius: 4px; margin-top: 0;"><code>𐆤𐰆𑂠𑺁ﳉ𐆤𐨫𑞺𑢜𐏻𐰆𑌹𑺁𐊞𐶬𑗩𑤠ﷀ𐙆𐷴𑂨𑿟燎𐝬𐪮𑖍𑩇ﾊ𐈁𐽸𑖲𑤱ﲑ𐈁𐯬𑆨𑱌ﭹ𐔅𐢍𑀪𑲷量𐏈𐭶𑕓𑻟，𐏪𐭶𑜛𑨙ﳊ𐓱𐹺𑇁𑯓𐆤𐸤𑌹𑢗ﲑ𐁲𐪳𑃩𑫐ﱒ𐒈𐡺𑟭𑴑濾𐅂𐲶𑛑𑼉אָ𐜧𐳋𑁳𑾔︤𐚽𐾱𑂠𑿟﵄𐄋𐰆𑞺𑻐ﯥ𐟁𐳅𑃦𑳔﹩𐍢𐦫𑃮𑧭﭅𐌩𐸢𑗧𑸢𐙜𐥼𑍇𑿠離𐛌𐴑𑟟𑶕𐜸𐤬𑝏𑶅濫𐆤𐰆𑝏𑻐諸𐇡𐰆𑊚𑹰濫𐛈𐰆𑊚𑹰杻𐄗𐯉𑘩𑲙</code></pre>
           
           <details id="encode-details" style="margin-top: 1em;">
             <summary style="cursor: pointer; font-weight: bold;">Show encode (wav to string) code</summary>
@@ -271,6 +283,131 @@ def str_to_audio(audio_str: str, mimi_model: MimiModel, device: str) -> np.ndarr
     with torch.no_grad():
         audio_decoded = mimi_model.decode(codes).audio_values[0]
     return audio_decoded.cpu().numpy()</code></pre>
+          </details>
+        </div>
+
+        <!-- Training Data -->
+        <div class="content has-text-justified">
+          <h3 id="training-data">Training Data</h3>
+          <div class="table-container">
+
+            <table class="table is-bordered is-striped is-narrow is-hoverable" style="font-size: 0.85em; max-width: 850px; margin: 0 auto;">
+              <thead>
+                <tr>
+                  <th>Dataset</th>
+                  <th>Split</th>
+                  <th>Type</th>
+                  <th>Hours</th>
+                  <th>~Tokens</th>
+                  <th>Source</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><a href="https://huggingface.co/datasets/soda-research/yodas2-mm-pretrain" target="_blank">Yodas</a></td>
+                  <td>English</td>
+                  <td>Speech + Transcript</td>
+                  <td>164K</td>
+                  <td>~131B†</td>
+                  <td>YouTube (100+ langs)</td>
+                </tr>
+                <tr>
+                  <td><a href="https://huggingface.co/datasets/soda-research/emilia-mm-pretrain-fix" target="_blank">Emilia</a></td>
+                  <td>English+Yodas-English</td>
+                  <td>Speech + Transcript</td>
+                  <td>139K</td>
+                  <td>~110B†</td>
+                  <td>YouTube (6 langs)</td>
+                </tr>
+                <tr>
+                  <td><a href="https://huggingface.co/datasets/soda-research/mls-en-mm-pretrain" target="_blank">MLS</a></td>
+                  <td>English</td>
+                  <td>Speech + Transcript</td>
+                  <td>44.5K</td>
+                  <td>~35B†</td>
+                  <td>LibriVox audiobooks</td>
+                </tr>
+                <tr style="background-color: #f5f5f5;">
+                  <td colspan="6"></td>
+                </tr>
+                <tr>
+                  <td>Nemotron-CC</td>
+                  <td>HQ-Actual</td>
+                  <td>Text</td>
+                  <td>—</td>
+                  <td>~220B*</td>
+                  <td>Web (CC filtered)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="help">
+            Hours and tokens are for English subsets used in our experiments. 
+            Token counts assume 100 tokens/sec for audio (8 Mimi codebooks at 12.5 Hz) and standard BPE tokenization for text. 
+            *Estimated from disk size. 
+            †Token counts include both audio-first and text-first formats (unrepeated token counts would be half).
+            <br>
+            Note: We provide processed speech data (discrete audio in interleaved sequence format) via the HuggingFace links above. 
+            For Yodas and Emilia, we release <strong>all languages</strong> in addition to the English subsets used in our main experiments.
+          </p>
+
+          <details style="margin-top: 1em;">
+            <summary style="cursor: pointer; font-weight: bold;">Details on Speech Data</summary>
+            <p style="margin-top: 0.5em;">
+              We select the largest publicly available speech corpora with utterance-level transcriptions:
+            </p>
+            <ul>
+              <li>
+                <strong>Yodas</strong> is one of the largest open speech datasets, 
+                containing over 370K hours across 100+ languages sourced from YouTube with automatic transcripts. 
+                For our main experiments, we use the English subset (~164K hours, ~131B tokens). 
+                In our preliminary experiment (SODA-prelim), we used 8 languages: 
+                English (131B tokens), Spanish (35B), French (17B), German (11B), Thai (0.5B), Hindi (0.4B), Arabic (0.3B), and Chinese (0.2B), 
+                totalling ~196B tokens. Later experiments isolate English only. 
+                The dataset offers diverse speaking styles, recording conditions, and utterance lengths.
+              </li>
+              <li>
+                <strong>Emilia</strong> is a large-scale multilingual dataset (~101K hours across 6 languages) 
+                specifically designed for speech generation, emphasizing spontaneous, natural speech with diverse speaking styles. 
+                We use the English subset (~140K hours). Emilia’s focus on spontaneity complements Yodas’s scale.
+              </li>
+              <li>
+                <strong>MLS</strong> (Multilingual LibriSpeech) is derived from LibriVox audiobooks, 
+                containing ~45K hours of English read speech. While MLS is a high-quality curated corpus, 
+                we find in the <a href="#annealing">Annealing experiment</a> that it performs poorly for our setting due to: 
+                (i) uncased, unpunctuated transcripts creating distribution mismatch with standard text, and 
+                (ii) fixed-length 10–20 second chunks lacking utterance length diversity. 
+                We therefore <strong>exclude MLS</strong> from our final training recipe.
+              </li>
+            </ul>
+          </details>
+
+          <details style="margin-top: 1em;">
+            <summary style="cursor: pointer; font-weight: bold;">Details on Text Data</summary>
+            <p style="margin-top: 0.5em;">
+              To improve semantic understanding and world knowledge, we incorporate high-quality text-only data:
+            </p>
+            <ul>
+              <li>
+                <strong>Nemotron-CC</strong> is a large-scale filtered web corpus derived from Common Crawl, 
+                widely used in LLM pre-training. We use the high-quality actual split, 
+                containing around 220B tokens (approximated from its disk size).
+              </li>
+            </ul>
+          </details>
+
+          <details style="margin-top: 1em;">
+            <summary style="cursor: pointer; font-weight: bold;">Final Data Mixture</summary>
+            <p style="margin-top: 0.5em;">
+              Based on our design choice investigations 
+              (see <a href="#annealing">Annealing</a> and <a href="#nemotron">Nemotron Mixture</a>), 
+              we use the following sampling weights for the IsoFLOP analysis and large-scale SODA training: 
+              <strong>5% text</strong> (Nemotron) and <strong>95% speech</strong> (Yodas + Emilia). 
+              Within the speech portion, we sample proportionally to dataset size, resulting in 
+              51.6% Yodas English, 28.8% Emilia-YODAS English, and 14.6% Emilia English. 
+              Since pre-training uses standard instance sampling and packing, 
+              these ratios closely reflect the actual token distribution during training.
+            </p>
           </details>
         </div>
 
@@ -622,6 +759,108 @@ def str_to_audio(audio_str: str, mimi_model: MimiModel, device: str) -> np.ndarr
           </ol>
           <p>
             <strong>Decision:</strong> We fix the pre-training mixture to <strong>5% Text (Nemotron) + 95% Speech (Yodas/Emilia)</strong> for all subsequent experiments.
+          </p>
+        </div>
+
+        <!-- Ablation on Token Composition -->
+        <div class="content has-text-justified">
+          <h2 id="token-comp">Ablation on Token Composition</h2>
+          
+          <h3 id="token-comp-goal">Goal & Motivation</h3>
+          <p>
+            We want to understand the impact of different token types on audio benchmarks. 
+            Specifically: what is the effect of (1) adding acoustic tokens to semantic tokens, and 
+            (2) interleaving text tokens alongside audio tokens?
+          </p>
+
+          <h3 id="token-comp-setup">Setup</h3>
+          <p>
+            We ablate three token configurations using a fixed budget of <strong>3×10<sup>20</sup> FLOPs</strong> 
+            (1.7B model, 30B tokens) with Yodas as speech data (no Nemotron):
+          </p>
+          <ul>
+            <li><strong>S (Semantic-only):</strong> Only the first Mimi codebook — captures linguistic/semantic content</li>
+            <li><strong>S+A (Semantic+Acoustic):</strong> Up to 8 Mimi codebooks — audio-only sequences</li>
+            <li><strong>S+A+T (Semantic+Acoustic+Text):</strong> 8 codebooks with text transcripts interleaved at the utterance level</li>
+          </ul>
+
+          <h3 id="token-comp-results">Results</h3>
+          <div class="table-container">
+            <table class="table is-bordered is-striped is-narrow is-hoverable" style="font-size: 0.85em; max-width: 800px; margin: 0 auto;">
+              <thead>
+                <tr>
+                  <th rowspan="2">Tokens</th>
+                  <th colspan="2" style="text-align: center;">Speech<br>(Semantic)</th>
+                  <th style="text-align: center;">Speech<br>(Acoustic)</th>
+                  <th colspan="2" style="text-align: center;">Text<br>(Knowledge)</th>
+                  <th colspan="2" style="text-align: center;">Cross-Modal</th>
+                </tr>
+                <tr>
+                  <th>sBLIMP↑</th>
+                  <th>sWUGGY↑</th>
+                  <th>Salmon↑</th>
+                  <th>tBLIMP↑</th>
+                  <th>tWUGGY↑</th>
+                  <th>ASR<sub>WER</sub>↓</th>
+                  <th>TTS<sub>WER</sub>↓</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>S</strong></td>
+                  <td>58.6</td><td>72.1</td><td>67.3</td>
+                  <td>×</td><td>×</td>
+                  <td>×</td><td>×</td>
+                </tr>
+                <tr>
+                  <td><strong>S+A</strong></td>
+                  <td>50.9</td><td>59.0</td><td>70.1</td>
+                  <td>×</td><td>×</td>
+                  <td>×</td><td>×</td>
+                </tr>
+                <tr>
+                  <td><strong>S+A+T</strong></td>
+                  <td>50.4</td><td>58.1</td><td>70.4</td>
+                  <td>67.8</td><td>71.6</td>
+                  <td>18.3</td><td>27.1</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="help">
+            S=Semantic, A=Acoustic, T=Text. × indicates the model lacks the capability to perform the task. 
+            Fixed budget: 3×10<sup>20</sup> FLOPs (1.7B model, 30B tokens).
+          </p>
+
+          <h3 id="token-comp-findings">Findings</h3>
+          <ol>
+            <li>
+              <strong>Semantic-only already captures rich information:</strong> 
+              Using only the first codebook already achieves 67.3% on Salmon, suggesting that 
+              the first Mimi codebook contains substantial information for audio likelihood evaluation.
+            </li>
+            <li>
+              <strong>Acoustic tokens improve acoustic modeling at the cost of semantics:</strong> 
+              Adding acoustic codebooks (S→S+A) improves Salmon from 67.3% to 70.1%, 
+              but causes a clear drop in semantic understanding (sBLIMP: 58.6% → 50.9%, sWUGGY: 72.1% → 59.0%). 
+              This is a fundamental trade-off: acoustic detail competes with semantic capacity.
+            </li>
+            <li>
+              <strong>Interleaving text unlocks cross-modal skills with minimal cost:</strong> 
+              Adding text tokens (S+A→S+A+T) causes only a small further drop on semantic benchmarks, 
+              no drop on acoustic benchmarks (Salmon: 70.1% → 70.4%), 
+              while unlocking ASR (18.3% WER) and TTS (27.1% WER) capabilities 
+              that are completely unavailable in audio-only configurations.
+            </li>
+            <li>
+              <strong>Semantic-only models are limited in practice:</strong> 
+              While semantic-only models excel at semantic understanding (sBLIMP: 58.6%, sWUGGY: 72.1%), 
+              they lack the acoustic detail needed for high-fidelity understanding and generation.
+            </li>
+          </ol>
+          <p>
+            <strong>Decision:</strong> We adopt <strong>S+A+T</strong> (Semantic+Acoustic+Text) as our token composition, 
+            accepting the semantic trade-off for broader capabilities in a unified general-purpose backbone.
           </p>
         </div>
 

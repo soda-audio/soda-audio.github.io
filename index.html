@@ -63,11 +63,17 @@
             <span class="author-block"><sup>5</sup>OpenAthena</span>
           </div>
 
-          <div class="column has-text-centered">
+          <div class="is-size-5 publication-authors">
+            <span class="author-block" style="font-family: monospace; font-size: 0.9em;">
+              <i class="fas fa-envelope" style="font-size: 0.95em; margin-right: 0.2em; vertical-align: middle;"></i>{potsawee, held, diyiy}@stanford.edu
+            </span>
+          </div>
+
+          <div class="column has-text-centered" style="padding-top: 40px; padding-bottom: 0px;">
             <div class="publication-links">
               <!-- PDF Link. -->
               <span class="link-block">
-                <a href="#"
+                <a href="./static/paper.pdf"
                    class="external-link button is-normal is-rounded is-dark">
                   <span class="icon">
                       <i class="fas fa-file-pdf"></i>
@@ -75,7 +81,7 @@
                   <span>Paper</span>
                 </a>
               </span>
-              <span class="link-block">
+              <!-- <span class="link-block">
                 <a href="#"
                    class="external-link button is-normal is-rounded is-dark">
                   <span class="icon">
@@ -83,10 +89,10 @@
                   </span>
                   <span>arXiv</span>
                 </a>
-              </span>
+              </span> -->
               <!-- Code Link. -->
               <span class="link-block">
-                <a href="#"
+                <a href="https://github.com/potsawee/marin/tree/audio-release-pr/experiments/audio"
                    class="external-link button is-normal is-rounded is-dark">
                   <span class="icon">
                       <i class="fab fa-github"></i>
@@ -96,12 +102,12 @@
               </span>
               <!-- Model Link. -->
               <span class="link-block">
-                <a href="#"
+                <a href="https://huggingface.co/soda-research"
                    class="external-link button is-normal is-rounded is-dark">
                   <span class="icon">
-                      <i class="fas fa-database"></i>
+                      <img src="./static/images/hf-logo-bw.svg" style="width: 20px;">
                   </span>
-                  <span>Models</span>
+                  <span>Models &amp; Data</span>
                   </a>
               </span>
               <!-- Experiment Log Link. -->
@@ -127,7 +133,7 @@
 
 
 
-<section class="section">
+<section class="section" style="padding-top: 15pt;">
   <div class="container is-max-desktop">
     <!-- Abstract. -->
     <div class="columns is-centered has-text-centered">
@@ -153,7 +159,7 @@
 
 
     <!-- Method / Token Composition. -->
-    <div class="columns is-centered has-text-centered">
+    <!-- <div class="columns is-centered has-text-centered">
       <div class="column is-four-fifths">
         <h2 class="title is-3">Token Composition Strategies</h2>
         <div class="content has-text-centered">
@@ -163,35 +169,55 @@
           <img src="./static/images/tokens.png" alt="Token composition strategies" style="max-width: 100%; height: auto;">
         </div>
       </div>
-    </div>
+    </div> -->
     <!--/ Method. -->
   </div>
 </section>
 
 
-<section class="section">
+<section class="section" style="padding-top: 0;">
   <div class="container is-max-desktop">
 
     <!-- Scaling Laws. -->
     <div class="columns is-centered">
       <div class="column is-full-width">
-        <h2 class="title is-3">Scaling Laws for Discrete Audio</h2>
+        <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 2.5rem 0;">
+        <h3 class="title is-4">Scaling Laws for Discrete Audio</h3>
 
         <div class="content has-text-justified">
           <p>
-            We conduct the first scaling law study for discrete audio models via IsoFLOP analysis on 64 models spanning 3×10<sup>18</sup> to 3×10<sup>20</sup> FLOPs. Our key finding: optimal data scales faster than optimal model size.
+            We conduct an IsoFLOP study for discrete audio models on <strong></strong>64 models</strong> spanning 3×10<sup>18</sup> to 3×10<sup>20</sup> FLOPs. For each compute budget, we train models of varying sizes and identify the configuration achieving the lowest validation loss.
           </p>
         </div>
 
-        <div class="content has-text-centered">
-          <img src="./static/images/isoflop_scaling_law_extrapolation.png" alt="Scaling laws" style="max-width: 100%; height: auto;">
+        <div style="display: flex; gap: 4px; align-items: flex-start;">
+          <div style="width: 30.5%; flex-shrink: 0;">
+            <figure style="text-align: center; margin: 0;">
+              <img src="./static/images/isoflop_sweep_loss_vs_N.png" alt="Validation NLL vs model size N" style="width: 100%;">
+              <figcaption style="font-size: 0.85em; color: #666; margin-top: 0.5em;">(a) Validation Loss vs model size N</figcaption>
+            </figure>
+          </div>
+          <div style="width: 30.5%; flex-shrink: 0;">
+            <figure style="text-align: center; margin: 0;">
+              <img src="./static/images/isoflop_sweep_loss_vs_D.png" alt="Validation NLL vs training tokens D" style="width: 100%;">
+              <figcaption style="font-size: 0.85em; color: #666; margin-top: 0.5em;">(b) Validation Loss vs training tokens D</figcaption>
+            </figure>
+          </div>
+          <div style="width: 37.2%; flex-shrink: 0;">
+            <figure style="text-align: center; margin: 0;">
+              <img src="./static/images/isoflop_scaling_law_extrapolation.png" alt="Optimal N* and D* vs compute budget C" style="width: 100%;">
+              <figcaption style="font-size: 0.85em; color: #666; margin-top: 0.5em;">(c) Optimal N* and D* vs compute C</figcaption>
+            </figure>
+          </div>
         </div>
 
-        <div class="content has-text-justified">
+        <div class="content has-text-justified" style="margin-top: 1em;">
           <p>
-            The fitted scaling laws reveal: N<sup>*</sup> ∝ C<sup>0.367</sup> and D<sup>*</sup> ∝ C<sup>0.579</sup>, where data scales 1.6× faster than model size. This differs from Chinchilla's equal scaling and suggests discrete audio tokens carry lower information density than text.
+            The fitted scaling laws reveal: <strong>N<sup>*</sup> ∝ C<sup>0.367</sup></strong> and <strong>D<sup>*</sup> ∝ C<sup>0.579</sup></strong> — optimal data grows <strong>1.6×</strong> faster than model size, unlike Chinchilla's equal scaling. This aligns with the intuition that discrete audio tokens (~100 tokens/sec) carry lower information density than text, favoring more data over larger models.
           </p>
         </div>
+
+        <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 2.5rem 0;">
 
         <h3 class="title is-4">Validation Loss as a Reliable Metric</h3>
         <div class="content has-text-justified">
@@ -208,10 +234,12 @@
     <!--/ Scaling Laws. -->
 
 
+    <!-- <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 2.5rem 0;"> -->
+
     <!-- SODA Models. -->
-    <div class="columns is-centered">
+    <!-- <div class="columns is-centered">
       <div class="column is-full-width">
-        <h2 class="title is-3">SODA: Scaling Open Discrete Audio</h2>
+        <h3 class="title is-4">SODA: Scaling Open Discrete Audio</h3>
 
         <div class="content has-text-justified">
           <p>
@@ -232,20 +260,299 @@
           </p>
         </div>
       </div>
-    </div>
+    </div> -->
     <!--/ SODA Models. -->
 
+
+    <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 2.5rem 0;">
 
     <!-- Audio Samples. -->
     <div class="columns is-centered">
       <div class="column is-full-width">
-        <h2 class="title is-3">Audio Samples</h2>
+        <h3 class="title is-4">Generation Samples</h3>
 
-        <div class="content has-text-justified">
-          <p style="text-align: center; color: #666;">
-            <em>Placeholder section - Audio samples will be added soon</em>
-          </p>
+        <!-- Audio Continuation -->
+        <h4 class="title is-5" style="margin-top: 1.5rem; color: #e06060;">Audio Continuation (Speech Utterance)</h4>
+        <p style="font-size: 0.9em; color: #888; margin-top: -0.5rem; margin-bottom: 1rem;">*Speech prompts and corresponding baseline outputs are taken from existing project page demos (e.g., <a href="https://pages.cs.huji.ac.il/adiyoss-lab/sims/" style="color: #888;">SIMS</a>, <a href="https://speechbot.github.io/spiritlm/" style="color: #888;">SpiritLM</a>, <a href="https://speed1313.github.io/llama-mimi/" style="color: #888;">Llama-Mimi</a>).</p>
+        <p style="font-size: 0.9em; color: #888; margin-top: -0.5rem; margin-bottom: 1rem;">1) SpiritLM and SIMS model only <span style="text-decoration: underline;">semantic tokens</span> with fixed vocoders, hence cannot maintain voice characteristics in their continuations.</p>
+        <p style="font-size: 0.9em; color: #888; margin-top: -0.5rem; margin-bottom: 1rem;">2) Llama-Mimi and SODA model both <span style="text-decoration: underline;">semantic and acoustic tokens</span>, allowing them to maintain voice characteristics.</p>
+
+
+        <!-- Column Headers -->
+        <div style="display: flex; gap: 16px; margin-bottom: 0.5rem;">
+          <div style="flex: 1; font-weight: bold; font-size: 0.95em;">Speech Prompt</div>
+          <div style="flex: 2; font-weight: bold; font-size: 0.95em;">Existing Model</div>
+          <div style="flex: 2; font-weight: bold; font-size: 0.95em;">SODA-4B-base</div>
         </div>
+
+        <!-- Row 0 -->
+        <div style="display: flex; gap: 16px; margin-bottom: 1.5rem; padding: 12px 0; border-top: 1px solid #eee;">
+          <!-- Prompt -->
+          <div style="flex: 1;">
+            <audio controls style="width: 100%; height: 40px;">
+              <source src="./static/audio/speech_cont0_input.mp3" type="audio/wav">
+            </audio>
+            <p style="font-size: 0.75em; color: #888; margin-top: 0.2em;"><strong>Source:</strong> <a href="https://pages.cs.huji.ac.il/adiyoss-lab/sims/" style="color: #209cee;">SIMS Demo</a></p>
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Transcript:</strong> This is a story of a tiny talking computer</p>
+          </div>
+          <!-- Existing Model -->
+          <div style="flex: 2;">
+            <audio controls style="width: 100%; height: 40px;">
+              <source src="./static/audio/speech_cont0_output_simsQwen7B.m4a" type="audio/wav">
+            </audio>
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Model:</strong> SIMS-Qwen2.5-7B</p>
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Transcript:</strong> these computers are now in the pockets on the desks in the cars of many of you think of your names know where you</p>
+          </div>
+          <!-- SODA-4B-base -->
+          <div style="flex: 2;">
+            <audio controls style="width: 100%; height: 40px;">
+              <source src="./static/audio/speech_cont0_output_soda4b.wav" type="audio/wav">
+            </audio>
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Transcript:</strong> because it eventually wasn't quite enough and through a number of life-changing times it's about a computer that changes the notion of who we are but how does it do any</p>
+          </div>
+        </div>
+
+        <!-- Row 1 -->
+        <div style="display: flex; gap: 16px; margin-bottom: 1.5rem; padding: 12px 0; border-top: 1px solid #eee;">
+          <!-- Prompt -->
+          <div style="flex: 1;">
+            <audio controls style="width: 100%; height: 40px;">
+              <source src="./static/audio/speech_cont1_input.mp3" type="audio/wav">
+            </audio>
+            <p style="font-size: 0.75em; color: #888; margin-top: 0.2em;"><strong>Source:</strong> <a href="https://pages.cs.huji.ac.il/adiyoss-lab/sims/" style="color: #209cee;">SIMS Demo</a></p>
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Transcript:</strong> The capital of England is</p>
+          </div>
+          <!-- Existing Model -->
+          <div style="flex: 2;">
+            <audio controls style="width: 100%; height: 40px;">
+              <source src="./static/audio/speech_cont1_output_simsQwen7B.m4a" type="audio/wav">
+            </audio>
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Model:</strong> SIMS-Qwen2.5-7B</p>
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Transcript:</strong> and ever has been the center of the wheel of Finance and here, the price of everything and everywhere</p>
+          </div>
+          <!-- SODA-4B-base -->
+          <div style="flex: 2;">
+            <audio controls style="width: 100%; height: 40px;">
+              <source src="./static/audio/speech_cont1_output_soda4b.wav" type="audio/wav">
+            </audio>
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Transcript:</strong> Do you know what the City of London is? The city is the third largest city in the vertical index. It functions like analogy, but it doesn't use that word. The city of London was first created</p>
+          </div>
+        </div>
+
+
+        <!-- Row 1.1 -->
+        <div style="display: flex; gap: 16px; margin-bottom: 1.5rem; padding: 12px 0; border-top: 1px solid #eee;">
+          <!-- Prompt -->
+          <div style="flex: 1;">
+            <audio controls style="width: 100%; height: 40px;">
+              <source src="./static/audio/speech_cont11_input.wav" type="audio/wav">
+            </audio>
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Source:</strong> <a href="https://speechbot.github.io/spiritlm/" style="color: #209cee;">SpiritLM Demo</a> (to demonstrate their expressive style transfer)</p>
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Transcript:</strong> Ha ha no I think you're thinking about Days of Thunder, which is a Tom Cruise racing movie</p>
+          </div>
+          <!-- Existing Model -->
+          <div style="flex: 2;">
+            <audio controls style="width: 100%; height: 40px;">
+              <source src="./static/audio/speech_cont11_output_spiritlm.wav" type="audio/wav">
+            </audio>
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Model:</strong> SpiritLM-7B-Expressive</p>
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Transcript:</strong> oh God yeah this it was amazing was it was it the one where he was a monster between rocks and stars was</p>
+          </div>
+          <!-- SODA-4B-base -->
+          <div style="flex: 2;">
+            <audio controls style="width: 100%; height: 40px;">
+              <source src="./static/audio/speech_cont11_output_soda4b.wav" type="audio/wav">
+            </audio>
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Transcript:</strong> yeah I got this idea for a girl who wants to know what life is like but important day for her is</p>
+          </div>
+        </div>
+
+        <!-- Row 2 -->
+        <div style="display: flex; gap: 16px; margin-bottom: 1.5rem; padding: 12px 0; border-top: 1px solid #eee;">
+          <!-- Prompt -->
+          <div style="flex: 1;">
+            <audio controls style="width: 100%; height: 40px;">
+              <source src="./static/audio/speech_cont2_input.wav" type="audio/wav">
+            </audio>
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Source:</strong> <a href="https://speed1313.github.io/llama-mimi/" style="color: #209cee;">Llama-Mimi Demo</a></p>
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Transcript:</strong> 1,2,3,4,5,6</p>
+          </div>
+          <!-- Existing Model -->
+          <div style="flex: 2;">
+            <audio controls style="width: 100%; height: 40px;">
+              <source src="./static/audio/speech_cont2_output_llamamimi8b.wav" type="audio/wav">
+            </audio>
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Model:</strong> Llama-Mimi-8B</p>
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Transcript:</strong> 7, 8, 9, 10, 11, 12, 9, 8 [5-second silence]</p>
+          </div>
+          <!-- SODA-4B-base -->
+          <div style="flex: 2;">
+            <audio controls style="width: 100%; height: 40px;">
+              <source src="./static/audio/speech_cont2_output_soda4b.wav" type="audio/wav">
+            </audio>
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Transcript:</strong> 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6</p>
+          </div>
+        </div>
+
+        <!-- Row 3 -->
+        <div style="display: flex; gap: 16px; margin-bottom: 1.5rem; padding: 12px 0; border-top: 1px solid #eee;">
+          <!-- Prompt -->
+          <div style="flex: 1;">
+            <audio controls style="width: 100%; height: 40px;">
+              <source src="./static/audio/speech_cont3_input.wav" type="audio/wav">
+            </audio>
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Source:</strong> <a href="https://speed1313.github.io/llama-mimi/" style="color: #209cee;">Llama-Mimi Demo</a></p>
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Transcript:</strong> This reality begins to explain the dark power</p>
+          </div>
+          <!-- Existing Model -->
+          <div style="flex: 2;">
+            <audio controls style="width: 100%; height: 40px;">
+              <source src="./static/audio/speech_cont3_output_llamamimi8b.wav" type="audio/wav">
+            </audio>
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Model:</strong> Llama-Mimi-8B</p>
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Transcript:</strong> of the evil craftiness of the two brute stocks which might be unduly impatient of the painful rustlings of their hair and the loud bellowings of their dogs the constant efforts of the buddhists in the regions of the southern seas for an indefinite time</p>
+          </div>
+          <!-- SODA-4B-base -->
+          <div style="flex: 2;">
+            <audio controls style="width: 100%; height: 40px;">
+              <source src="./static/audio/speech_cont3_output_soda4b.wav" type="audio/wav">
+            </audio>
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Transcript:</strong> influence, and intensity of life. This is Celestial Energy intense changes in life, contracts with expansion uplift and turns to down. Of harness, loss of life is true a</p>
+          </div>
+        </div>
+
+        <h4 class="title is-5" style="margin-top: 1.5rem; color: #e06060;">Audio Continuation (More Complex Audio Prompts)</h4>
+
+        <!-- Column Headers -->
+        <div style="display: flex; gap: 16px; margin-bottom: 0.5rem;">
+          <div style="flex: 1; font-weight: bold; font-size: 0.95em;">Audio Prompt</div>
+          <div style="flex: 2; font-weight: bold; font-size: 0.95em;">SODA-4B-base</div>
+        </div>
+
+        <!-- Row 1 -->
+        <div style="display: flex; gap: 16px; margin-bottom: 1.5rem; padding: 12px 0; border-top: 1px solid #eee;">
+          <div style="flex: 1;">
+            <audio controls style="width: 100%; height: 40px;">
+              <source src="./static/audio/speech_with_bg.wav" type="audio/wav">
+            </audio>
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Description:</strong> A person speaks with some background music</p>
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Transcript:</strong> The Internet combines elements of both mass and interpersonal communication</p>
+          </div>
+          <div style="flex: 2;">
+            <audio controls style="width: 100%; height: 40px;">
+              <source src="./static/audio/speech_with_bg_output_soda4b.wav" type="audio/wav">
+            </audio>
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Transcript:</strong> When I'm majoring in the engineering management and structure design program, I get the opportunity to work on the Sovereign West project.</p>
+          </div>
+        </div>
+
+        <!-- Row 2 -->
+        <div style="display: flex; gap: 16px; margin-bottom: 1.5rem; padding: 12px 0; border-top: 1px solid #eee;">
+          <div style="flex: 1;">
+            <audio controls style="width: 100%; height: 40px;">
+              <source src="./static/audio/multispeaker.wav" type="audio/wav">
+            </audio>
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Description:</strong> Multi-speaker recording between male and female</p>
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Transcript:</strong> [S1] Welcome to this English test! I'm John. What is your name? [S2] Hi, John. I'm Sarah. [S1] Do you work or are you a student?</p>
+
+          </div>
+          <div style="flex: 2;">
+            <audio controls style="width: 100%; height: 40px;">
+              <source src="./static/audio/multispeaker_output_soda4b.wav" type="audio/wav">
+            </audio>
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Transcript:</strong> I'm a student. Do you live or are you staying this year? I live in apartment number five. What does your name say after six?</p>
+          </div>
+        </div>
+
+
+        <!-- Zero-shot TTS -->
+        <h4 class="title is-5" style="margin-top: 1.5rem; color: #e06060;">Zero-shot TTS</h4>
+        <!-- Column Headers -->
+        <div style="display: flex; gap: 16px; margin-bottom: 0.5rem;">
+          <div style="flex: 1; font-weight: bold; font-size: 0.95em;">Source Voice</div>
+          <div style="flex: 1; font-weight: bold; font-size: 0.95em;">Target Text</div>
+          <div style="flex: 2; font-weight: bold; font-size: 0.95em;">Generated Speech (SODA-4B-base)</div>
+        </div>
+
+        <!-- Row 2 -->
+        <div style="display: flex; gap: 16px; margin-bottom: 1.5rem; padding: 12px 0; border-top: 1px solid #eee;">
+          <div style="flex: 1;">
+            <audio controls style="width: 100%; height: 40px;">
+              <source src="./static/audio/tts2.wav" type="audio/wav">
+            </audio>
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Transcript:</strong> concord returned to its place amidst the tents</p>
+
+          </div>
+          <div style="flex: 1; display: flex; align-items: center;">
+            <p style="font-size: 0.85em; color: #555;">This utterance is taken from the test set of librispeech on hugging face</p>
+          </div>
+          <div style="flex: 2;">
+            <audio controls style="width: 100%; height: 40px;">
+              <source src="./static/audio/tts2_output_soda4b.wav" type="audio/wav">
+            </audio>
+          </div>
+        </div>
+
+        <!-- Row 1 -->
+        <div style="display: flex; gap: 16px; margin-bottom: 1.5rem; padding: 12px 0; border-top: 1px solid #eee;">
+          <div style="flex: 1;">
+            <audio controls style="width: 100%; height: 40px;">
+              <source src="./static/audio/tts1.wav" type="audio/wav">
+            </audio>
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Transcript:</strong> Joe Keaton disapproved of films, and Buster also had reservations about the medium.</p>
+
+          </div>
+          <div style="flex: 1; display: flex; align-items: center;">
+            <p style="font-size: 0.85em; color: #555;">This speech is generated by our AI model and it is not real</p>
+          </div>
+          <div style="flex: 2;">
+            <audio controls style="width: 100%; height: 40px;">
+              <source src="./static/audio/tts1_output_soda4b.wav" type="audio/wav">
+            </audio>
+          </div>
+        </div>
+
+
+        <!-- ASR -->
+        <h4 class="title is-5" style="margin-top: 1.5rem; color: #e06060;">ASR</h4>
+
+        <!-- Column Headers -->
+        <div style="display: flex; gap: 16px; margin-bottom: 0.5rem;">
+          <div style="flex: 1; font-weight: bold; font-size: 0.95em;">Input Speech</div>
+          <div style="flex: 2; font-weight: bold; font-size: 0.95em;">Ground-Truth</div>
+          <div style="flex: 2; font-weight: bold; font-size: 0.95em;">Transcription (SODA-4B-base)</div>
+        </div>
+
+        <!-- Row 1 -->
+        <div style="display: flex; gap: 16px; margin-bottom: 1.5rem; padding: 12px 0; border-top: 1px solid #eee;">
+          <div style="flex: 1;">
+            <audio controls style="width: 100%; height: 40px;">
+              <source src="./static/audio/asr1.wav" type="audio/wav">
+            </audio>
+          </div>
+          <div style="flex: 2; display: flex; align-items: center;">
+            <p style="font-size: 0.85em; color: #555;">lord kingsdown funded the kingsdown church</p>
+          </div>
+          <div style="flex: 2; display: flex; align-items: center;">
+            <p style="font-size: 0.85em; color: #555;">Lord Kingsdown funded the Kingsdown church</p>
+          </div>
+        </div>
+
+        <!-- Row 2 -->
+        <div style="display: flex; gap: 16px; margin-bottom: 1.5rem; padding: 12px 0; border-top: 1px solid #eee;">
+          <div style="flex: 1;">
+            <audio controls style="width: 100%; height: 40px;">
+              <source src="./static/audio/asr2.wav" type="audio/wav">
+            </audio>
+          </div>
+          <div style="flex: 2; display: flex; align-items: center;">
+            <p style="font-size: 0.85em; color: #555;">just then leocadia came to herself and embracing the cross seemed changed into a sea of tears and the gentleman remained in utter bewilderment until his wife had repeated to him from beginning to end leocadia's whole story and he believed it through the blessed dispensation of heaven which had confirmed it by so many convincing testimonies</p>
+          </div>
+          <div style="flex: 2; display: flex; align-items: center;">
+            <p style="font-size: 0.85em; color: #555;">Just then Leo Kadya came to herself, and embracing the cross, seemed changed into a sea of tears, and the gentleman remaining in utter bewilderment, until his wife had repeated to him, from beginning to end, Leo Kadya's whole story, and he believed it, through the blessed dispensation of heaven, which had confirmed it by so many convincing testimonies.</p>
+          </div>
+        </div>
+
       </div>
     </div>
     <!--/ Audio Samples. -->
@@ -259,7 +566,7 @@
 
 <section class="section" id="BibTeX">
   <div class="container is-max-desktop content">
-    <h2 class="title">BibTeX</h2>
+    <h3 class="title is-4">BibTeX</h3>
     <pre><code>@article{soda2026,
   author    = {Manakul, Potsawee and Gan, Woody Haosheng and Bartelds, Martijn and Sun, Guangzhi and Held, William and Yang, Diyi},
   title     = {Scaling Open Discrete Audio Foundation Models with Interleaved Semantic, Acoustic, and Text Tokens},
