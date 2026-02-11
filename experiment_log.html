@@ -897,6 +897,9 @@ def str_to_audio(audio_str: str, mimi_model: MimiModel, device: str) -> np.ndarr
             <li><strong>Data:</strong> 5% Nemotron + 95% Yodas/Emilia (as determined previously)</li>
             <li><strong>Config:</strong> <a href="https://github.com/marin-community/marin/blob/main/experiments/isoflop_sweep.py">isoflop_sweep.py</a></li>
           </ul>
+          <p>
+            <strong>Link:</strong> <a href="https://wandb.ai/potsawee/marin/groups/IsoFlop/workspace">WandB Log</a>
+          </p>
 
           <h3 id="isoflop-results">Results</h3>
           <p>
@@ -1537,18 +1540,59 @@ def str_to_audio(audio_str: str, mimi_model: MimiModel, device: str) -> np.ndarr
 
         <!-- Open Questions -->
         <div class="content has-text-justified">
-          <h2 id="open-questions">Open Questions</h2>
+          <h2 id="open-questions">Open Questions & Future Directions</h2>
           <p>
-            <em>This section is under construction. It will contain open questions and future directions for discrete audio model training.</em>
+            While this work establishes a scaling law and training recipes for discrete audio models, there remains some interesting open questions for future work. 
           </p>
+
+          <h4 style="margin-top: 1em;">1. Where is the Emergence?</h3>
           <p>
-            Placeholder for discussion of:
+            Unlike text LLMs which exhibit emergent capabilities at scale (e.g., unseen skills like arithmetic, reasoning, in-context learning), 
+            this work did not observe strong emergent speech or audio capabilities from pre-training alone. Our models require fine-tuning to unlock their full potential, similar to the BERT/BART/GPT-2 era in NLP.
           </p>
           <ul>
-            <li>Optimal tokenization strategies for discrete audio</li>
-            <li>Scaling behaviors beyond current compute budgets</li>
-            <li>Hybrid approaches combining cold-start and warm-start</li>
-            <li>Other architectural and training considerations</li>
+            <li><strong>Question:</strong> Does audio require significantly more scale (parameters or data) than text to show emergence?</li>
+            <li><strong>Question:</strong> Is next-token prediction on <em>flattened</em> sequences sufficient for hierarchical audio structures, or do we need different objectives?</li>
+            <li><strong>Direction:</strong> Investigating audio few-shot learning to see if capabilities can be prompted rather than fine-tuned.</li>
+          </ul>
+
+          <h4 style="margin-top: 1em;">2. Resolving the Semantic-Acoustic Trade-off</h4>
+          <p>
+            Our results show a trade-offbetween <strong>what</strong> is said (semantic) and <strong>how</strong> it is said (acoustic). 
+            Adding acoustic tokens improves fidelity but degrades semantic understanding (sBLIMP/sWUGGY drop).
+          </p>
+          <ul>
+            <li><strong>Question:</strong> Can we decouple these trade-offs using multi-module/stream architectures or curriculum learning (e.g., start semantic, fade in acoustic)?</li>
+            <li><strong>Direction:</strong> Exploring RVQ-weighted loss functions (weighting earlier codebooks higher) to force the model to prioritize semantic content (codebook 0) before optimizing fine acoustic details.</li>
+          </ul>
+
+          <h4 style="margin-top: 1em;">3. Unexplored Design Choices</h4>
+          <p>
+            We selected the Mimi tokenizer and a specific interleaving pattern, but the design space is vast.
+          </p>
+          <ul>
+            <li><strong>Alternative Tokenizers:</strong> Would other tokenizers perform better or yield different patterns?</li>
+            <li><strong>Sampling Rates:</strong> We used a fixed frame rate. What is the optimal token-to-second ratio for efficiency vs fidelity?</li>
+            <li><strong> Disentanglement:</strong> Can we design tokenizers that explicitly disentangle content/semantics from speaker identity/prosody?</li>
+          </ul>
+
+          <h4 style="margin-top: 1em;">4. Data Scaling Laws for Audio</h4>
+          <p>
+            We found that optimal data size scales 1.6× faster than model size ($D \propto N^{1.6}$), 
+            consistent with the hypothesis that discrete audio tokens have lower information density (`lower entropy`) than text tokens.
+          </p>
+          <ul>
+            <li><strong>Question:</strong> Does this exponent hold for larger models, or does it saturate? or general audio data (beyond just speech)?</li>
+            <li><strong>Question:</strong> How does this ratio change with better audio tokenizers (higher compression)?</li>
+          </ul>
+
+          <h4 style="margin-top: 1em;">5. Path to LLM-level Knowledge</h4>
+          <p>
+            An overarching question is whether training on audio data (even with interleaved transcripts) can ever reach the reasoning and world knowledge capabilities of text-trained LLMs.
+          </p>
+          <ul>
+            <li><strong>Question:</strong> Is there a theoretical limit to knowledge acquisition from speech due to the lower information density or the conversational nature of most speech data?</li>
+            <li><strong>Question:</strong> Can we bridge the gap by simply scaling up, or is a fundamental architectural change (e.g., warmer starting points, hybrid objectives) required?</li>
           </ul>
         </div>
 

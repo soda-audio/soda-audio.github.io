@@ -202,7 +202,7 @@
 
         <div class="content has-text-justified">
           <p>
-            We conduct an IsoFLOP study for discrete audio models on <strong></strong>64 models</strong> spanning 3×10<sup>18</sup> to 3×10<sup>20</sup> FLOPs. For each compute budget, we train models of varying sizes and identify the configuration achieving the lowest validation loss.
+            We conduct an IsoFLOP study for discrete audio data (interleaved audio tokens at 100 tokens per sec and text tokens) on 64 models spanning 3×10<sup>18</sup> to 3×10<sup>20</sup> FLOPs. For each compute budget, we train models of varying sizes and identify the configuration achieving the lowest validation loss.
           </p>
         </div>
 
@@ -229,21 +229,26 @@
 
         <div class="content has-text-justified" style="margin-top: 1em;">
           <p>
-            The fitted scaling laws reveal: <strong>N<sup>*</sup> ∝ C<sup>0.367</sup></strong> and <strong>D<sup>*</sup> ∝ C<sup>0.579</sup></strong> — optimal data grows <strong>1.6×</strong> faster than model size, unlike Chinchilla's equal scaling. This aligns with the intuition that discrete audio tokens (~100 tokens/sec) carry lower information density than text, favoring more data over larger models.
+            The fitted scaling laws reveal: <strong>N<sup>*</sup> ∝ C<sup>0.367</sup></strong> and <strong>D<sup>*</sup> ∝ C<sup>0.579</sup></strong>. 
+            This indicates that optimal data grows <strong>1.6×</strong> faster than optimal model size. 
+            This finding is in line with existing findings in text LLMs where previous work interpreted this as low information density of text pre-training data.
           </p>
         </div>
 
         <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 2.5rem 0;">
 
-        <h3 class="title is-4">Validation Loss as a Reliable Metric</h3>
+        <h3 class="title is-4">Predicting Emergence Behavior of Skills</h3>
         <div class="content has-text-justified">
           <p>
-            Before conducting IsoFLOP analysis, we validated that validation loss (NLL) on held-out audio data strongly correlates with downstream task performance across all 64 models.
+            We use models trained for the IsoFLOP study to analyze how skills evolve with validation loss. 
+            Later, when we train large-scale models (SODA), we validate whether these trends confirm our prediction. 
+            The figure below shows how downstream performance correlates with validation loss. 
+            The SODA models (<strong>★</strong>) align well with the trends predicted by the 64 IsoFLOP-trained models (<strong>●</strong>), demonstrating predictable emergence of capabilities.
           </p>
         </div>
 
         <div class="content has-text-centered">
-          <img src="./static/images/nll_correlation.png" alt="NLL correlation with downstream performance" style="max-width: 100%; height: auto;">
+          <img src="./static/images/nll_correlation.png" alt="Predicting emergence behavior of skills" style="max-width: 100%; height: auto;">
         </div>
       </div>
     </div>
@@ -287,11 +292,33 @@
       <div class="column is-full-width">
         <h3 class="title is-4">Generation Samples</h3>
 
+        <div class="content has-text-justified">
+          <p>
+            SODA treats all audio language tasks—whether text-to-audio, audio-to-text, or audio continuation—as simple <strong>next-token prediction</strong> problems. By doing utterance-level interleaving of discrete audio tokens with corresponding text tokens, we can formulate diverse tasks using standard prompting strategies.
+          </p>
+          <p>
+            Below is the pseudo-code for prompting SODA to perform audio continuation, zero-shot TTS, and ASR, as used in our demo:
+          </p>
+          <pre style="background-color: #f5f5f5; padding: 1em; font-size: 0.9em; border-radius: 4px; overflow-x: auto;"><code># Audio Continuation
+Prompt:  &lt;|audio_start|&gt; {audio_context}
+Predict: {continued_audio_tokens} # Text tokens (if generated) are omitted in audio convertion
+
+# Zero-Shot TTS (Voice Cloning)
+Prompt:  &lt;|text_start|&gt; {text} &lt;|text_end|&gt; &lt;|audio_start|&gt; {prompt_audio} &lt;|audio_end|&gt; \
+         &lt;|text_start|&gt; {target_text} &lt;|text_end|&gt; &lt;|audio_start|&gt;
+Predict: {target_audio_tokens} &lt;|audio_end|&gt;
+
+# Automatic Speech Recognition (ASR)
+Prompt:  &lt;|audio_start|&gt; {input_audio} &lt;|audio_end|&gt; &lt;|text_start|&gt;
+Predict: {transcribed_text_tokens} &lt;|text_end|&gt;</code></pre>
+
+        </div>
+
         <!-- Audio Continuation -->
         <h4 class="title is-5" style="margin-top: 1.5rem; color: #e06060;">Audio Continuation (Speech Utterance)</h4>
-        <p style="font-size: 0.9em; color: #888; margin-top: -0.5rem; margin-bottom: 1rem;">*Speech prompts and corresponding baseline outputs are taken from existing project page demos (e.g., <a href="https://pages.cs.huji.ac.il/adiyoss-lab/sims/" style="color: #888;">SIMS</a>, <a href="https://speechbot.github.io/spiritlm/" style="color: #888;">SpiritLM</a>, <a href="https://speed1313.github.io/llama-mimi/" style="color: #888;">Llama-Mimi</a>).</p>
-        <p style="font-size: 0.9em; color: #888; margin-top: -0.5rem; margin-bottom: 1rem;">1) SpiritLM and SIMS model only <span style="text-decoration: underline;">semantic tokens</span> with fixed vocoders, hence cannot maintain voice characteristics in their continuations.</p>
-        <p style="font-size: 0.9em; color: #888; margin-top: -0.5rem; margin-bottom: 1rem;">2) Llama-Mimi and SODA model both <span style="text-decoration: underline;">semantic and acoustic tokens</span>, allowing them to maintain voice characteristics.</p>
+        <p style="font-size: 0.9em; color: #818589; margin-top: -0.5rem; margin-bottom: 1rem;">*Speech prompts and corresponding baseline outputs are taken from existing project page demos (e.g., <a href="https://pages.cs.huji.ac.il/adiyoss-lab/sims/" style="color: #818589;">SIMS</a>, <a href="https://speechbot.github.io/spiritlm/" style="color: #818589;">SpiritLM</a>, <a href="https://speed1313.github.io/llama-mimi/" style="color: #818589;">Llama-Mimi</a>).</p>
+        <p style="font-size: 0.9em; color: #818589; margin-top: -0.5rem; margin-bottom: 1rem;">1) SpiritLM and SIMS model only <span style="text-decoration: underline;">semantic tokens</span> with fixed vocoders, hence cannot maintain voice characteristics in their continuations.</p>
+        <p style="font-size: 0.9em; color: #818589; margin-top: -0.5rem; margin-bottom: 1rem;">2) Llama-Mimi and SODA model both <span style="text-decoration: underline;">semantic and acoustic tokens</span>, allowing them to maintain voice characteristics.</p>
 
 
         <!-- Column Headers -->
@@ -441,20 +468,20 @@
 
         <!-- Column Headers -->
         <div style="display: flex; gap: 16px; margin-bottom: 0.5rem;">
-          <div style="flex: 1; font-weight: bold; font-size: 0.95em;">Audio Prompt</div>
-          <div style="flex: 2; font-weight: bold; font-size: 0.95em;">SODA-4B-base</div>
+          <div style="flex: 2; font-weight: bold; font-size: 0.95em;">Audio Prompt</div>
+          <div style="flex: 3; font-weight: bold; font-size: 0.95em;">SODA-4B-base</div>
         </div>
 
         <!-- Row 1 -->
         <div style="display: flex; gap: 16px; margin-bottom: 1.5rem; padding: 12px 0; border-top: 1px solid #eee;">
-          <div style="flex: 1;">
+          <div style="flex: 2;">
             <audio controls style="width: 100%; height: 40px;">
               <source src="./static/audio/speech_with_bg.wav" type="audio/wav">
             </audio>
             <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Description:</strong> A person speaks with some background music</p>
             <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Transcript:</strong> The Internet combines elements of both mass and interpersonal communication</p>
           </div>
-          <div style="flex: 2;">
+          <div style="flex: 3;">
             <audio controls style="width: 100%; height: 40px;">
               <source src="./static/audio/speech_with_bg_output_soda4b.wav" type="audio/wav">
             </audio>
@@ -464,7 +491,7 @@
 
         <!-- Row 2 -->
         <div style="display: flex; gap: 16px; margin-bottom: 1.5rem; padding: 12px 0; border-top: 1px solid #eee;">
-          <div style="flex: 1;">
+          <div style="flex: 2;">
             <audio controls style="width: 100%; height: 40px;">
               <source src="./static/audio/multispeaker.wav" type="audio/wav">
             </audio>
@@ -472,7 +499,7 @@
             <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Transcript:</strong> [S1] Welcome to this English test! I'm John. What is your name? [S2] Hi, John. I'm Sarah. [S1] Do you work or are you a student?</p>
 
           </div>
-          <div style="flex: 2;">
+          <div style="flex: 3;">
             <audio controls style="width: 100%; height: 40px;">
               <source src="./static/audio/multispeaker_output_soda4b.wav" type="audio/wav">
             </audio>
@@ -486,27 +513,8 @@
         <!-- Column Headers -->
         <div style="display: flex; gap: 16px; margin-bottom: 0.5rem;">
           <div style="flex: 1; font-weight: bold; font-size: 0.95em;">Source Voice</div>
-          <div style="flex: 1; font-weight: bold; font-size: 0.95em;">Target Text</div>
+          <div style="flex: 2; font-weight: bold; font-size: 0.95em;">Target Text</div>
           <div style="flex: 2; font-weight: bold; font-size: 0.95em;">Generated Speech (SODA-4B-base)</div>
-        </div>
-
-        <!-- Row 2 -->
-        <div style="display: flex; gap: 16px; margin-bottom: 1.5rem; padding: 12px 0; border-top: 1px solid #eee;">
-          <div style="flex: 1;">
-            <audio controls style="width: 100%; height: 40px;">
-              <source src="./static/audio/tts2.wav" type="audio/wav">
-            </audio>
-            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Transcript:</strong> concord returned to its place amidst the tents</p>
-
-          </div>
-          <div style="flex: 1; display: flex; align-items: center;">
-            <p style="font-size: 0.85em; color: #555;">This utterance is taken from the test set of librispeech on hugging face</p>
-          </div>
-          <div style="flex: 2;">
-            <audio controls style="width: 100%; height: 40px;">
-              <source src="./static/audio/tts2_output_soda4b.wav" type="audio/wav">
-            </audio>
-          </div>
         </div>
 
         <!-- Row 1 -->
@@ -518,7 +526,7 @@
             <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Transcript:</strong> Joe Keaton disapproved of films, and Buster also had reservations about the medium.</p>
 
           </div>
-          <div style="flex: 1; display: flex; align-items: center;">
+          <div style="flex: 2; display: flex; align-items: flex-start;">
             <p style="font-size: 0.85em; color: #555;">This speech is generated by our AI model and it is not real</p>
           </div>
           <div style="flex: 2;">
@@ -528,6 +536,43 @@
           </div>
         </div>
 
+        <!-- Row 2 -->
+        <!-- <div style="display: flex; gap: 16px; margin-bottom: 1.5rem; padding: 12px 0; border-top: 1px solid #eee;">
+          <div style="flex: 1;">
+            <audio controls style="width: 100%; height: 40px;">
+              <source src="./static/audio/tts2.wav" type="audio/wav">
+            </audio>
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Transcript:</strong> concord returned to its place amidst the tents</p>
+
+          </div>
+          <div style="flex: 2; display: flex; align-items: flex-start;">
+            <p style="font-size: 0.85em; color: #555;">This utterance is taken from the test set of librispeech on hugging face</p>
+          </div>
+          <div style="flex: 2;">
+            <audio controls style="width: 100%; height: 40px;">
+              <source src="./static/audio/tts2_output_soda4b.wav" type="audio/wav">
+            </audio>
+          </div>
+        </div> -->
+
+        <!-- Row 3 -->
+        <div style="display: flex; gap: 16px; margin-bottom: 1.5rem; padding: 12px 0; border-top: 1px solid #eee;">
+          <div style="flex: 1;">
+            <audio controls style="width: 100%; height: 40px;">
+              <source src="./static/audio/tts3.wav" type="audio/wav">
+            </audio>
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Transcript:</strong> Hello everyone my name is William Held</p>
+
+          </div>
+          <div style="flex: 2; display: flex; align-items: flex-start;">
+            <p style="font-size: 0.85em; color: #555;"> Let me tell you about Marin. It is an open lab for building foundation models, together. We’re training powerful models from scratch, and sharing and programmatically documenting every step: the code, the data, the experiments, the mistakes…all in real-time. We invite anyone who shares our vision of open science and open-source to join and contribute, whether you want to try out a new architecture, training algorithm, dataset, evaluation…there is a lot to do!</p>
+          </div>
+          <div style="flex: 2;">
+            <audio controls style="width: 100%; height: 40px;">
+              <source src="./static/audio/tts3_output_soda4b.wav" type="audio/wav">
+            </audio>
+          </div>
+        </div>
 
         <!-- ASR -->
         <h4 class="title is-5" style="margin-top: 1.5rem; color: #e06060;">ASR</h4>
@@ -536,7 +581,7 @@
         <div style="display: flex; gap: 16px; margin-bottom: 0.5rem;">
           <div style="flex: 1; font-weight: bold; font-size: 0.95em;">Input Speech</div>
           <div style="flex: 2; font-weight: bold; font-size: 0.95em;">Ground-Truth</div>
-          <div style="flex: 2; font-weight: bold; font-size: 0.95em;">Transcription (SODA-4B-base)</div>
+          <div style="flex: 2; font-weight: bold; font-size: 0.95em;">Generated Text (SODA-4B-base)</div>
         </div>
 
         <!-- Row 1 -->
@@ -546,10 +591,10 @@
               <source src="./static/audio/asr1.wav" type="audio/wav">
             </audio>
           </div>
-          <div style="flex: 2; display: flex; align-items: center;">
+          <div style="flex: 2; display: flex; align-items: flex-start;">
             <p style="font-size: 0.85em; color: #555;">lord kingsdown funded the kingsdown church</p>
           </div>
-          <div style="flex: 2; display: flex; align-items: center;">
+          <div style="flex: 2; display: flex; align-items: flex-start;">
             <p style="font-size: 0.85em; color: #555;">Lord Kingsdown funded the Kingsdown church</p>
           </div>
         </div>
@@ -561,10 +606,10 @@
               <source src="./static/audio/asr2.wav" type="audio/wav">
             </audio>
           </div>
-          <div style="flex: 2; display: flex; align-items: center;">
+          <div style="flex: 2; display: flex; align-items: flex-start;">
             <p style="font-size: 0.85em; color: #555;">just then leocadia came to herself and embracing the cross seemed changed into a sea of tears and the gentleman remained in utter bewilderment until his wife had repeated to him from beginning to end leocadia's whole story and he believed it through the blessed dispensation of heaven which had confirmed it by so many convincing testimonies</p>
           </div>
-          <div style="flex: 2; display: flex; align-items: center;">
+          <div style="flex: 2; display: flex; align-items: flex-start;">
             <p style="font-size: 0.85em; color: #555;">Just then Leo Kadya came to herself, and embracing the cross, seemed changed into a sea of tears, and the gentleman remaining in utter bewilderment, until his wife had repeated to him, from beginning to end, Leo Kadya's whole story, and he believed it, through the blessed dispensation of heaven, which had confirmed it by so many convincing testimonies.</p>
           </div>
         </div>
@@ -575,9 +620,6 @@
 
   </div>
 </section>
-
-
-
 
 
 <section class="section" id="BibTeX">
