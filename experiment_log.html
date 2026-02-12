@@ -152,18 +152,20 @@
         <div class="content has-text-justified">
           <h2 id="intro">Introduction</h2>
           <p>
-            This page serves as a detailed record of the experiments conducted during the development of SODA. 
-            Unlike the main paper which focuses on the final validated recipe and key findings, this log documents 
-            the journey, including design choices that were explored but discarded, detailed ablation studies, 
-            and technical nuances of the large-scale training process.
+            This page serves as a record of the experiments conducted during the development of SODA. This log documents 
+            our journey and technical nuances of the project, which may not be covered in the main paper.
+            <br><br>
+            The project started with simple questions: "If we tokenize large-scale audio data into discrete tokens, can we train a vanilla transformer model (e.g., Llama or Qwen architecture in the same manner as <a href="https://marin.community/">Marin</a> for LLMs) to generate next audio frames? how do we exploit existing audio and text data for a broader set of skills? does the model have any meaningful capabilities? and how does it scale up?"
           </p>
         </div>
+
+        <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 2.5rem 0;">
 
         <!-- Model Basics -->
         <div class="content has-text-justified">
           <h2 id="basics">Basics</h2>
           <p>
-            Across our experiments, we use a consistent audio tokenization strategy based on the <a href="https://huggingface.co/kyutai/mimi">Mimi</a> audio codec.
+            Across our experiments, we use the same audio tokenization strategy based on the <a href="https://huggingface.co/kyutai/mimi">Mimi</a> audio codec.
           </p>
           <ul>
             <li><strong>Token Structure:</strong> 8 codebooks (1 semantic + 7 acoustic) flattened into a single stream.</li>
@@ -411,6 +413,8 @@ def str_to_audio(audio_str: str, mimi_model: MimiModel, device: str) -> np.ndarr
           </details>
         </div>
 
+        <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 2.5rem 0;">
+
         <!-- SODA-preliminary -->
         <div class="content has-text-justified">
           <h2 id="soda-prelim">SODA-preliminary</h2>
@@ -439,7 +443,7 @@ def str_to_audio(audio_str: str, mimi_model: MimiModel, device: str) -> np.ndarr
 
           <p>
             <strong>Link:</strong> 
-            <a href="https://wandb.ai/marin-community/marin/runs/exp1699_marin_yodas2-b5edae/">WandB Log</a> 
+            <a href="https://wandb.ai/marin-community/marin/runs/exp1699_marin_yodas2-b5edae/">📈 WandB Log</a> 
             <!-- |  -->
             <!-- <a href="https://marin.community/data-browser/view/?paths=%5B%22gs%3A%2F%2Fmarin-us-central1%2Fexperiments%2Fexp1699_marin_yodas2-9a5778.json%22%5D">Data Browser</a> -->
           </p>
@@ -545,10 +549,12 @@ def str_to_audio(audio_str: str, mimi_model: MimiModel, device: str) -> np.ndarr
           </ol>
           
           <p>
-            <strong>Artifacts:</strong> The pre-trained weights for SODA-prelim on HF: 
+            <strong>🤗 Artifacts:</strong> The model checkpoint for SODA-prelim on HF: 
             <a href="https://huggingface.co/soda-research/soda-600m-prelim">soda-research/soda-600m-prelim</a>.
           </p>
         </div>
+
+        <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 2.5rem 0;">
 
         <!-- SODA-prelim Annealing -->
         <div class="content has-text-justified">
@@ -568,12 +574,12 @@ def str_to_audio(audio_str: str, mimi_model: MimiModel, device: str) -> np.ndarr
           <ul>
             <li>
               <strong>Annealing:</strong> Starting from the stable pre-training phase of SODA-prelim (0.6B), we branched out using different datasets during the cooldown/annealing phase (following the WSD schedule).
-              <br><small><a href="https://wandb.ai/potsawee/marin/groups/Anneal-Blueberry/workspace">WandB Log</a></small>
+              <br><small><a href="https://wandb.ai/potsawee/marin/groups/Anneal-Blueberry/workspace">📈 WandB Log</a></small>
             </li>
             <li>
               <strong>Small-Scale Scratch:</strong> Training small 150M parameter models on just 10B tokens from scratch (~10 hours on v5p-8). 
               The goal was to see if these cheap runs correlate with the more expensive annealing runs.
-              <br><small><a href="https://wandb.ai/potsawee/marin/groups/DataMix-150M/workspace">WandB Log</a></small>
+              <br><small><a href="https://wandb.ai/potsawee/marin/groups/DataMix-150M/workspace">📈 WandB Log</a></small>
             </li>
           </ul>
 
@@ -701,6 +707,8 @@ def str_to_audio(audio_str: str, mimi_model: MimiModel, device: str) -> np.ndarr
           </p>
         </div>
 
+        <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 2.5rem 0;">
+
         <!-- Nemotron Mixture -->
         <div class="content has-text-justified">
           <h2 id="nemotron">Nemotron Mixture</h2>
@@ -726,7 +734,7 @@ def str_to_audio(audio_str: str, mimi_model: MimiModel, device: str) -> np.ndarr
             <li><strong>Ratios tested:</strong> 0%, 2.5%, 5%, 7.5%, 10%, 20%, 30%, 40%, 50%, 60%, 70%, 80%, 90%</li>
           </ul>
           <p>
-            <strong>Link:</strong> <a href="https://wandb.ai/potsawee/marin/groups/Nemotron-Sweep-150M/workspace">WandB Log</a>
+            <strong>Link:</strong> <a href="https://wandb.ai/potsawee/marin/groups/Nemotron-Sweep-150M/workspace">📈 WandB Log</a>
           </p>
 
           <h3 id="nemotron-results">Results</h3>
@@ -761,6 +769,8 @@ def str_to_audio(audio_str: str, mimi_model: MimiModel, device: str) -> np.ndarr
             <strong>Decision:</strong> We fix the pre-training mixture to <strong>5% Text (Nemotron) + 95% Speech (Yodas/Emilia)</strong> for all subsequent experiments.
           </p>
         </div>
+
+        <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 2.5rem 0;">
 
         <!-- Ablation on Token Composition -->
         <div class="content has-text-justified">
@@ -864,6 +874,8 @@ def str_to_audio(audio_str: str, mimi_model: MimiModel, device: str) -> np.ndarr
           </p>
         </div>
 
+        <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 2.5rem 0;">
+
         <!-- IsoFLOP Study -->
         <div class="content has-text-justified">
           <h2 id="isoflop">IsoFLOP Study</h2>
@@ -898,7 +910,7 @@ def str_to_audio(audio_str: str, mimi_model: MimiModel, device: str) -> np.ndarr
             <li><strong>Config:</strong> <a href="https://github.com/marin-community/marin/blob/main/experiments/isoflop_sweep.py">isoflop_sweep.py</a></li>
           </ul>
           <p>
-            <strong>Link:</strong> <a href="https://wandb.ai/potsawee/marin/groups/IsoFlop/workspace">WandB Log</a>
+            <strong>Link:</strong> <a href="https://wandb.ai/potsawee/marin/groups/IsoFlop/workspace">📈 WandB Log</a>
           </p>
 
           <h3 id="isoflop-results">Results</h3>
@@ -968,7 +980,17 @@ def str_to_audio(audio_str: str, mimi_model: MimiModel, device: str) -> np.ndarr
               <figcaption style="font-size: 0.85em; color: #666; margin-top: 0.5em;">Comparison of IsoFLOP approach vs parametric fit approach.</figcaption>
             </figure>
           </details>
+
+          <br>
+
+          <p>
+            <strong>🤗 Artifacts:</strong> The collection of IsoFLOP checkpoints is available on HF: 
+            <a href="https://huggingface.co/collections/soda-research/discrete-audio-isoflop-models">soda-research/discrete-audio-isoflop-models</a>.
+          </p>
+
         </div>
+
+        <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 2.5rem 0;">
 
         <!-- Correlation between Loss and Downstream Metrics -->
         <div class="content has-text-justified">
@@ -1106,6 +1128,8 @@ def str_to_audio(audio_str: str, mimi_model: MimiModel, device: str) -> np.ndarr
           </ol>
         </div>
 
+        <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 2.5rem 0;">
+
         <!-- SODA-LongRun -->
         <div class="content has-text-justified">
           <h2 id="longrun">SODA-LongRun</h2>
@@ -1182,7 +1206,7 @@ def str_to_audio(audio_str: str, mimi_model: MimiModel, device: str) -> np.ndarr
             Training the 4B model on 500B tokens reaches 1.3×10<sup>22</sup> FLOPs (~1 week on v5p-256 TPU).
           </p>
           <p>
-            <strong>Link:</strong> <a href="https://wandb.ai/potsawee/marin/groups/Marin-Audio-Longrun/workspace">WandB Log</a>
+            <strong>Link:</strong> <a href="https://wandb.ai/potsawee/marin/groups/Marin-Audio-Longrun/workspace">📈 WandB Log</a>
           </p>
 
           <h3 id="longrun-results">Results</h3>
@@ -1375,7 +1399,13 @@ def str_to_audio(audio_str: str, mimi_model: MimiModel, device: str) -> np.ndarr
             speech understanding, acoustic quality, text knowledge, and cross-modal ASR/TTS — 
             making it a unified foundation for spoken language modeling.
           </p>
+          <p>
+            <strong>🤗 Artifacts:</strong> The model checkpoints for SODA-base on HF: 
+            <a href="https://huggingface.co/collections/soda-research/soda-models">soda-research/soda-models</a>.
+          </p>
         </div>
+
+        <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 2.5rem 0;">
 
         <!-- Warm-start vs Cold-start -->
         <div class="content has-text-justified">
@@ -1400,7 +1430,7 @@ def str_to_audio(audio_str: str, mimi_model: MimiModel, device: str) -> np.ndarr
             <li><strong>Budget:</strong> 500B tokens each (~4 epochs)</li>
           </ul>
           <p>
-            <strong>Link:</strong> <a href="https://wandb.ai/potsawee/marin/groups/Marin-Audio-Longrun/workspace">WandB Log</a> (same group as SODA-LongRun)
+            <strong>Link:</strong> <a href="https://wandb.ai/potsawee/marin/groups/Marin-Audio-Longrun/workspace">📈 WandB Log</a> (same group as SODA-LongRun)
           </p>
 
           <h3 id="warmstart-results">Results</h3>
@@ -1536,7 +1566,15 @@ def str_to_audio(audio_str: str, mimi_model: MimiModel, device: str) -> np.ndarr
             the persistent text-knowledge advantage of warm-start may outweigh these downsides. 
             A hybrid approach (cold-start pre-training followed by text-enriched fine-tuning) is an interesting future direction.
           </p>
+
+          <p>
+            <strong>🤗 Artifacts:</strong> The model checkpoints for SODA-warmstart on HF: 
+            <a href="https://huggingface.co/collections/soda-research/soda-warm-start-qwen3-based-models">soda-research/soda-warm-start-qwen3-based-models</a>.
+          </p>
+
         </div>
+
+        <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 2.5rem 0;">
 
         <!-- Open Questions -->
         <div class="content has-text-justified">

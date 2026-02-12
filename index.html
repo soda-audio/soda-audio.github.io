@@ -237,7 +237,7 @@
 
         <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 2.5rem 0;">
 
-        <h3 class="title is-4">Predicting Emergence Behavior of Skills</h3>
+        <h3 class="title is-4">Predicting Model Performance as We Scale Up</h3>
         <div class="content has-text-justified">
           <p>
             We use models trained for the IsoFLOP study to analyze how skills evolve with validation loss. 
@@ -314,8 +314,14 @@ Predict: {transcribed_text_tokens} &lt;|text_end|&gt;</code></pre>
 
         </div>
 
+        <p style="font-size: 0.9em; color: #666; font-style: italic; margin-top: 0.5rem;">
+          Note: Other audio-language tasks can be similarly formulated as next-token prediction, though effective performance requires fine-tuning as emergence (e.g., in-context learning skills) is not yet observed. See inference examples in <a href="https://huggingface.co/soda-research/soda-4b-base">SODA-4B-base</a>.
+        </p>
+
+
+        
         <!-- Audio Continuation -->
-        <h4 class="title is-5" style="margin-top: 1.5rem; color: #e06060;">Audio Continuation (Speech Utterance)</h4>
+        <h4 class="title is-5" style="margin-top: 2.5rem; color: #e06060;">Audio Continuation (Speech Utterance)</h4>
         <p style="font-size: 0.9em; color: #818589; margin-top: -0.5rem; margin-bottom: 1rem;">*Speech prompts and corresponding baseline outputs are taken from existing project page demos (e.g., <a href="https://pages.cs.huji.ac.il/adiyoss-lab/sims/" style="color: #818589;">SIMS</a>, <a href="https://speechbot.github.io/spiritlm/" style="color: #818589;">SpiritLM</a>, <a href="https://speed1313.github.io/llama-mimi/" style="color: #818589;">Llama-Mimi</a>).</p>
         <p style="font-size: 0.9em; color: #818589; margin-top: -0.5rem; margin-bottom: 1rem;">1) SpiritLM and SIMS model only <span style="text-decoration: underline;">semantic tokens</span> with fixed vocoders, hence cannot maintain voice characteristics in their continuations.</p>
         <p style="font-size: 0.9em; color: #818589; margin-top: -0.5rem; margin-bottom: 1rem;">2) Llama-Mimi and SODA model both <span style="text-decoration: underline;">semantic and acoustic tokens</span>, allowing them to maintain voice characteristics.</p>
