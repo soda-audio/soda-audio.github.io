@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="description"
-        content="SODA: Scaling Open Discrete Audio Foundation Models with Interleaved Semantic, Acoustic, and Text Tokens. A systematic empirical study of native audio foundation models with scaling laws.">
+        content="SODA (Scaling Open Discrete Audio)">
   <meta name="keywords" content="Audio Foundation Models, Scaling Laws, Discrete Audio, Speech Language Models, SODA">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>SODA: Scaling Open Discrete Audio</title>
+  <title>SODA (Scaling Open Discrete Audio)</title>
 
 
 
@@ -118,7 +118,7 @@
               </span>
               <!-- Model Link. -->
               <span class="link-block">
-                <a href="https://huggingface.co/soda-research"
+                <a href="https://huggingface.co/collections/SALT-NLP/soda-discrete-audio-models"
                    class="external-link button is-normal is-rounded is-dark">
                   <span class="icon">
                       <img src="./static/images/hf-logo-bw.svg" style="width: 20px;">
@@ -151,42 +151,31 @@
 
 <section class="section" style="padding-top: 15pt;">
   <div class="container is-max-desktop">
-    <!-- Abstract. -->
+    <!-- TL;DR -->
     <div class="columns is-centered has-text-centered">
       <div class="column is-four-fifths">
-        <h2 class="title is-3">Abstract</h2>
+        <h2 class="title is-3">TL;DR</h2>
         <div class="content has-text-justified">
           <p>
-            Current audio language models are predominantly text-first, either extending pre-trained text LLM backbones or relying on semantic-only audio tokens, limiting general audio modeling. This paper presents a systematic empirical study of native audio foundation models that apply next-token prediction to audio at scale, jointly modeling semantic content, acoustic details, and text to support both general audio generation and cross-modal capabilities.
+            Built on <a href="https://marin.community/">Marin</a> (an open LLM development community), this project started with a simple question:
+            <em>"If we tokenize large-scale audio data into discrete tokens, can we train a vanilla transformer—in the same way we train text LLMs—to build a unified audio backbone where every audio-text task is just next-token prediction?"</em>
           </p>
           <p>
-            We provide comprehensive empirical insights for building such models:
-            (1) We systematically investigate design choices—data sources, text mixture ratios, and token composition—establishing a validated training recipe.
-            (2) We conduct the first scaling law study for discrete audio models via IsoFLOP analysis on 64 models spanning 3×10<sup>18</sup> to 3×10<sup>20</sup> FLOPs, finding that optimal data grows 1.6× faster than optimal model size.
-            (3) We apply these lessons to train <strong>SODA</strong> (Scaling Open Discrete Audio), a suite of models from 135M to 4B parameters on 500B tokens, comparing against our scaling predictions and existing models.
+            We trained LLMs on sequences of discrete audio tokens, scaling from <strong>135M to 4B parameters</strong> on <strong>500B tokens</strong>.
+            To exploit existing speech-text data, we interleave speech utterances with their transcripts at the utterance level, using open data (Yodas + Emilia).
           </p>
           <p>
-            SODA serves as a flexible backbone for diverse audio/text tasks—we demonstrate this by fine-tuning for voice-preserving speech-to-speech translation, using the same unified architecture.
+            Along the way, we investigated design choices (data sources, text pre-training data mixtures like Nemotron-CC), 
+            studied the <a href="#scaling-laws">scaling behaviors</a> of discrete audio models, and derived compute-optimal allocation strategies.
+          </p>
+          <p>
+            <strong>SODA</strong> is a unified pre-trained audio backbone where any audio-language task can be formulated as next-token prediction—through prompting and/or fine-tuning.
+            Check out the <a href="experiment_log.html">Experiment Log</a> for the full story of how we got here.
           </p>
         </div>
       </div>
     </div>
-    <!--/ Abstract. -->
-
-
-    <!-- Method / Token Composition. -->
-    <!-- <div class="columns is-centered has-text-centered">
-      <div class="column is-four-fifths">
-        <h2 class="title is-3">Token Composition Strategies</h2>
-        <div class="content has-text-centered">
-          <p>
-            We explore three token composition strategies for training discrete audio models. Our utterance-level interleaved approach combines semantic, acoustic, and text tokens to enable cross-modal capabilities.
-          </p>
-          <img src="./static/images/tokens.png" alt="Token composition strategies" style="max-width: 100%; height: auto;">
-        </div>
-      </div>
-    </div> -->
-    <!--/ Method. -->
+    <!--/ TL;DR -->
   </div>
 </section>
 
@@ -195,14 +184,16 @@
   <div class="container is-max-desktop">
 
     <!-- Scaling Laws. -->
-    <div class="columns is-centered">
+    <div class="columns is-centered" id="scaling-laws">
       <div class="column is-full-width">
         <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 2.5rem 0;">
-        <h3 class="title is-4">Scaling Laws for Discrete Audio</h3>
+        <h3 class="title is-4">How Does Discrete Audio Scale?</h3>
 
         <div class="content has-text-justified">
           <p>
-            We conduct an IsoFLOP study for discrete audio data (interleaved audio tokens at 100 tokens per sec and text tokens) on 64 models spanning 3×10<sup>18</sup> to 3×10<sup>20</sup> FLOPs. For each compute budget, we train models of varying sizes and identify the configuration achieving the lowest validation loss.
+            Scaling laws have been well-studied for text LLMs, but how do they apply to discrete audio models?
+            So we trained <strong>64 models</strong> across seven compute budgets (3×10<sup>18</sup> to 3×10<sup>20</sup> FLOPs), 
+            varying model size and data to find the sweet spot at each budget.
           </p>
         </div>
 
@@ -229,21 +220,22 @@
 
         <div class="content has-text-justified" style="margin-top: 1em;">
           <p>
-            The fitted scaling laws reveal: <strong>N<sup>*</sup> ∝ C<sup>0.367</sup></strong> and <strong>D<sup>*</sup> ∝ C<sup>0.579</sup></strong>. 
-            This indicates that optimal data grows <strong>1.6×</strong> faster than optimal model size. 
-            This finding is in line with existing findings in text LLMs where previous work interpreted this as low information density of text pre-training data.
+            To the best of our knowledge, this is the first compute-optimal study for discrete audio models.
+            Under our setup (100 audio tokens/sec with the Mimi tokenizer), 
+            optimal data grows <strong>1.6× faster</strong> than optimal model size 
+            (<strong>N<sup>*</sup> ∝ C<sup>0.367</sup></strong>, <strong>D<sup>*</sup> ∝ C<sup>0.579</sup></strong>), 
+            landing in a similar ballpark to text LLM scaling studies that attributed this trend to low information density of training tokens.
           </p>
         </div>
 
         <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 2.5rem 0;">
 
-        <h3 class="title is-4">Predicting Model Performance as We Scale Up</h3>
+        <h3 class="title is-4">Can We Predict What Happens at Scale?</h3>
         <div class="content has-text-justified">
           <p>
-            We use models trained for the IsoFLOP study to analyze how skills evolve with validation loss. 
-            Later, when we train large-scale models (SODA), we validate whether these trends confirm our prediction. 
-            The figure below shows how downstream performance correlates with validation loss. 
-            The SODA models (<strong>★</strong>) align well with the trends predicted by the 64 IsoFLOP-trained models (<strong>●</strong>), demonstrating predictable emergence of capabilities.
+            Using those 64 models, we mapped how each skill improves as validation loss decreases.
+            Then we trained our full SODA models (135M → 4B) and checked: <em>do the trends hold?</em>
+            The SODA models (<strong>★</strong>) land right on the curves predicted by the smaller runs (<strong>●</strong>)—these results suggest that <em>capabilities scale predictably</em> similar to text LLMs.
           </p>
         </div>
 
@@ -260,7 +252,7 @@
     <!-- SODA Models. -->
     <!-- <div class="columns is-centered">
       <div class="column is-full-width">
-        <h3 class="title is-4">SODA: Scaling Open Discrete Audio</h3>
+        <h3 class="title is-4">SODA (Scaling Open Discrete Audio)</h3>
 
         <div class="content has-text-justified">
           <p>
