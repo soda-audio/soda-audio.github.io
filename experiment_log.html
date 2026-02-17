@@ -111,6 +111,7 @@
                 <li><a href="#isoflop-setup">Setup</a></li>
                 <li><a href="#isoflop-results">Results</a></li>
                 <li><a href="#isoflop-findings">Findings</a></li>
+                <li><a href="#isoflop-parametric">Parametric Loss Prediction</a></li>
               </ul>
             </li>
             <li>
@@ -441,6 +442,8 @@ def str_to_audio(audio_str: str, mimi_model: MimiModel, device: str) -> np.ndarr
             </li>
           </ul>
 
+          <strong>Experiment Script:</strong> <a href="https://github.com/potsawee/marin/blob/audio-release-pr/experiments/audio/exp1699_marin_yodas2.py">exp1699_marin_yodas2.py</a>
+
           <p>
             <strong>Link:</strong> 
             <a href="https://wandb.ai/marin-community/marin/runs/exp1699_marin_yodas2-b5edae/">📈 WandB Log</a> 
@@ -582,6 +585,8 @@ def str_to_audio(audio_str: str, mimi_model: MimiModel, device: str) -> np.ndarr
               <br><small><a href="https://wandb.ai/potsawee/marin/groups/DataMix-150M/workspace">📈 WandB Log</a></small>
             </li>
           </ul>
+
+          <strong>Experiment Script:</strong> <a href="https://github.com/potsawee/marin/blob/audio-release-pr/experiments/audio/exp1699_marin_yodas2_anneal.py">exp1699_marin_yodas2_anneal.py</a>
 
           <h3 id="annealing-results">Results</h3>
           <div class="table-container">
@@ -733,6 +738,7 @@ def str_to_audio(audio_str: str, mimi_model: MimiModel, device: str) -> np.ndarr
             <li><strong>Speech data:</strong> Yodas (English)</li>
             <li><strong>Ratios tested:</strong> 0%, 2.5%, 5%, 7.5%, 10%, 20%, 30%, 40%, 50%, 60%, 70%, 80%, 90%</li>
           </ul>
+          <strong>Experiment Script:</strong> <a href="https://github.com/potsawee/marin/blob/audio-release-pr/experiments/audio/exp1699_nemotron_sweep.py">exp1699_nemotron_sweep.py</a>
           <p>
             <strong>Link:</strong> <a href="https://wandb.ai/potsawee/marin/groups/Nemotron-Sweep-150M/workspace">📈 WandB Log</a>
           </p>
@@ -793,6 +799,7 @@ def str_to_audio(audio_str: str, mimi_model: MimiModel, device: str) -> np.ndarr
             <li><strong>S+A (Semantic+Acoustic):</strong> Up to 8 Mimi codebooks — audio-only sequences</li>
             <li><strong>S+A+T (Semantic+Acoustic+Text):</strong> 8 codebooks with text transcripts interleaved at the utterance level</li>
           </ul>
+          <strong>Experiment Script:</strong> <a href="https://github.com/potsawee/marin/blob/audio-release-pr/experiments/audio/exp1699_ablate_tokens.py">exp1699_ablate_tokens.py</a>
 
           <h3 id="token-comp-results">Results</h3>
           <div class="table-container">
@@ -883,10 +890,10 @@ def str_to_audio(audio_str: str, mimi_model: MimiModel, device: str) -> np.ndarr
           <h3 id="isoflop-goal">Goal & Motivation</h3>
           <p>
             Scaling laws for text LLMs are well-studied (Kaplan et al., Chinchilla, Llama3, DeepSeek), 
-            yet no such analysis exists for discrete audio models. 
-            Since audio tokens are far more granular (~100 tokens/sec with 8-codebook Mimi) 
-            compared to text (~3–4 tokens/sec), the optimal allocation between model size and training data may differ significantly.
-            We conduct the first scaling law study for discrete audio models to answer:
+            yet no such analysis exists for discrete audio models (e.g., codec-based TTS models or any transformer models trained on audio tokens). 
+            Since audio tokens are typically more granular (~100 tokens/sec with 8-codebook Mimi) 
+            compared to text (~3–4 tokens/sec) at a normal speaking rate, the optimal allocation between model size and training data may differ significantly.
+            This work conducts the first scaling law study for discrete audio models to answer:
           </p>
           <ul>
             <li>How should we allocate compute between model size (N) and training data (D)?</li>
@@ -900,15 +907,15 @@ def str_to_audio(audio_str: str, mimi_model: MimiModel, device: str) -> np.ndarr
             spanning two orders of magnitude from 3×10<sup>18</sup> to 3×10<sup>20</sup> FLOPs.
             For each compute budget C, we train models of varying sizes (77M to 4.2B parameters), 
             adjusting the number of training tokens D to satisfy C ≈ 6ND.
-            At each budget, we identify the configuration achieving the lowest validation loss, yielding optimal pairs (N*, D*).
+            At each budget, we identify the configuration achieving the lowest validation loss, yielding optimal pairs (N*, D*). We follow the setup of the IsoFLOP study in <a href="https://arxiv.org/abs/2510.24626">Relative Scaling Laws for LLMs</a> by adapting this <a href="https://github.com/marin-community/marin/blob/main/experiments/isoflop_sweep.py">script</a>.
           </p>
           <ul>
             <li><strong>Models trained:</strong> 64 configurations total</li>
             <li><strong>Compute range:</strong> 3×10<sup>18</sup> to 3×10<sup>20</sup> FLOPs</li>
             <li><strong>Model sizes:</strong> 77M to 4.2B parameters</li>
             <li><strong>Data:</strong> 5% Nemotron + 95% Yodas/Emilia (as determined previously)</li>
-            <li><strong>Config:</strong> <a href="https://github.com/marin-community/marin/blob/main/experiments/isoflop_sweep.py">isoflop_sweep.py</a></li>
           </ul>
+          <strong>Experiment Script:</strong> <a href="https://github.com/potsawee/marin/blob/audio-release-pr/experiments/audio/isoflop_audio_sweep.py">isoflop_sweep.py</a>
           <p>
             <strong>Link:</strong> <a href="https://wandb.ai/potsawee/marin/groups/IsoFlop/workspace">📈 WandB Log</a>
           </p>
@@ -969,17 +976,84 @@ def str_to_audio(audio_str: str, mimi_model: MimiModel, device: str) -> np.ndarr
             </li>
           </ol>
           
-          <details id="isoflop-parametric" style="margin-top: 1em;">
-            <summary style="cursor: pointer; font-weight: bold;">Show alternative parametric fit approach</summary>
-            <p style="margin-top: 0.5em;">
-              An alternative approach fits a parametric equation L = E + A/N<sup>α</sup> + B/D<sup>β</sup> on all data points 
-              and derives exponents as N* ∝ C<sup>β/(α+β)</sup> and D* ∝ C<sup>α/(α+β)</sup>. This yields similar findings:
-            </p>
-            <figure style="text-align: center; margin: 1em 0;">
-              <img src="./static/images/isoflop_parametric_fit_comparison.png" alt="Parametric fit comparison" style="max-width: 80%;">
-              <figcaption style="font-size: 0.85em; color: #666; margin-top: 0.5em;">Comparison of IsoFLOP approach vs parametric fit approach.</figcaption>
-            </figure>
-          </details>
+          <h3 id="isoflop-parametric">Parametric Loss Prediction</h3>
+          <p>
+            Beyond identifying compute-optimal allocations, we also want to <em>predict</em> the final validation loss 
+            for models trained at larger compute budgets — including over-trained configurations where the model is 
+            trained on more data than its compute-optimal amount, for example, our SODA-LongRun experiments in a subsequent section.
+            To preict final validation loss, we fit the parametric equation from 
+            <a href="https://arxiv.org/abs/2203.15556">Chinchilla</a>:
+          </p>
+          <div style="background-color: #f5f5f5; padding: 1em; font-size: 1.1em; border-radius: 4px; text-align: center; font-family: 'Noto Sans', sans-serif;">
+            L(N, D) = E + A / N<sup>α</sup> + B / D<sup>β</sup>
+          </div>
+          <p style="margin-top: 0.75em;">
+            where <em>N</em> is the model size (parameters), <em>D</em> is the number of training tokens, 
+            and <em>E</em> represents the irreducible loss.
+            We fit this equation on all <strong>64 data points</strong> from our IsoFLOP sweep 
+            (not just the compute-optimal points), obtaining:
+          </p>
+          <div style="background-color: #f5f5f5; padding: 1em; font-size: 1.1em; border-radius: 4px; text-align: center; font-family: 'Noto Sans', sans-serif;">
+            L = 3.169 + 215886 / N<sup>0.684</sup> + 4750 / D<sup>0.439</sup>
+            &nbsp;&nbsp;&nbsp; (R<sup>2</sup> = 0.983)
+          </div>
+
+          <p style="margin-top: 1em;">
+            <strong>Note on derived scaling exponents.</strong>
+            This parametric fit approach also provides an alternative derivation of scaling exponents.
+            Using C = 6ND, the compute-optimal model size and data can be derived as 
+            N* ∝ C<sup>β/(α+β)</sup> and D* ∝ C<sup>α/(α+β)</sup>.
+            Using our fitted α = 0.684 and β = 0.439, we obtain:
+          </p>
+          <div style="background-color: #f5f5f5; padding: 1em; font-size: 1.05em; border-radius: 4px; font-family: 'Noto Sans', sans-serif;">
+            <table style="margin: 0 auto; border-collapse: collapse; font-size: 1em;">
+              <tr>
+                <td style="padding: 0.3em 1em;"><strong>N*</strong> ∝ C<sup>0.391</sup></td>
+                <td style="padding: 0.3em 1em; color: #888;">(vs. C<sup>0.367</sup> from IsoFLOP fit)</td>
+              </tr>
+              <tr>
+                <td style="padding: 0.3em 1em;"><strong>D*</strong> ∝ C<sup>0.609</sup></td>
+                <td style="padding: 0.3em 1em; color: #888;">(vs. C<sup>0.579</sup> from IsoFLOP fit)</td>
+              </tr>
+            </table>
+          </div>
+          <p style="margin-top: 0.75em;">
+            These derived exponents are reasonably close to the empirically fitted values from the IsoFLOP analysis, 
+            with both approaches showing D*/N* ≈ 1.57.
+            This asymmetry (data scaling faster than model size) is consistent with the lower information density 
+            of discrete audio tokens compared to text.
+          </p>
+
+          <p style="margin-top: 1em;">
+            <strong>Loss predictions.</strong>
+            The figure below shows loss predictions based on our parametric fit at different overtraining ratios 
+            <em>K</em> = D/D*, where <em>K</em> = 1 is compute-optimal 
+            and higher <em>K</em> indicates more overtraining (smaller model trained on more data).
+            Grey points show IsoFLOP sweep data. 
+            Colored curves show predicted loss at <em>K</em> = 1 (optimal), 5, 20, and 100.
+            Colored circles show the actual SODA models (135M, 600M, 1.7B, 4B).
+          </p>
+          <figure style="text-align: center; margin: 1.5em 0;">
+            <img src="./static/images/isoflop_parametric_fit_comparison.png" alt="Loss vs compute at different overtraining ratios using parametric fit" style="max-width: 66%;">
+            <figcaption style="font-size: 0.85em; color: #666; margin-top: 0.5em;">
+              Loss vs. compute at different overtraining ratios <em>K</em> using the fitted parametric equation.
+              Grey: IsoFLOP sweep data. Colored curves: predicted loss at different <em>K</em>.
+              Colored circles: actual SODA models, which achieve <em>lower</em> losses than predicted.
+            </figcaption>
+          </figure>
+          <p>
+            Interestingly, our longer-trained SODA models (135M–4B) in the subsequent experiment achieve losses <em>lower</em> than predicted by the parametric equation — 
+            even lower than the optimal (<em>K</em> = 1) extrapolated prediction for the 1.7B and 4B models.
+            This systematic under-prediction when extrapolating from the IsoFLOP regime 
+            (3×10<sup>18</sup>–3×10<sup>20</sup> FLOPs) to higher compute 
+            (6×10<sup>20</sup>–1.3×10<sup>22</sup> FLOPs) could be because 
+            scaling law extrapolations diverge in the far tails of the compute distribution.
+            The offset suggests that either scaling exponents evolve favorably at larger scales, 
+            or the irreducible loss <em>E</em> is lower than estimated from the smaller-scale regime.
+            Despite these prediction challenges, downstream task performance scales reliably with validation loss 
+            (see <a href="#nll-correlation">Correlation section</a>), 
+            making validation loss a useful proxy even when absolute loss predictions are imperfect.
+          </p>
 
           <br>
 
@@ -1205,6 +1279,9 @@ def str_to_audio(audio_str: str, mimi_model: MimiModel, device: str) -> np.ndarr
           <p style="margin-top: 0.75em;">
             Training the 4B model on 500B tokens reaches 1.3×10<sup>22</sup> FLOPs (~1 week on v5p-256 TPU).
           </p>
+
+          <strong>Experiment Script:</strong> <a href="https://github.com/potsawee/marin/blob/audio-release-pr/experiments/audio/exp1699_marin_audio_all.py">exp1699_marin_audio_all.py</a>
+
           <p>
             <strong>Link:</strong> <a href="https://wandb.ai/potsawee/marin/groups/Marin-Audio-Longrun/workspace">📈 WandB Log</a>
           </p>
@@ -1429,6 +1506,9 @@ def str_to_audio(audio_str: str, mimi_model: MimiModel, device: str) -> np.ndarr
             <li><strong>Scales:</strong> 600M and 1.7B parameters</li>
             <li><strong>Budget:</strong> 500B tokens each (~4 epochs)</li>
           </ul>
+
+          <strong>Experiment Script:</strong> <a href="https://github.com/potsawee/marin/blob/audio-release-pr/experiments/audio/exp1699_marin_audio_ws.py">exp1699_marin_audio_ws.py</a>
+
           <p>
             <strong>Link:</strong> <a href="https://wandb.ai/potsawee/marin/groups/Marin-Audio-Longrun/workspace">📈 WandB Log</a> (same group as SODA-LongRun)
           </p>
