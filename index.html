@@ -8,6 +8,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>SODA (Scaling Open Discrete Audio)</title>
 
+  <!-- Open Graph / Social Media -->
+  <meta property="og:title" content="SODA">
+  <meta property="og:description" content="Scaling Open Discrete Audio Foundation Models with Interleaved Semantic, Acoustic, and Text Tokens">
+  <meta property="og:image" content="https://soda-audio.github.io/static/images/og_image.jpg">
+  <meta property="og:url" content="https://soda-audio.github.io/">
+  <meta property="og:type" content="website">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="SODA">
+  <meta name="twitter:description" content="Scaling Open Discrete Audio Foundation Models with Interleaved Semantic, Acoustic, and Text Tokens">
+  <meta name="twitter:image" content="https://soda-audio.github.io/static/images/og_image.jpg">
+
 
 
   <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
@@ -142,14 +155,14 @@
                   </a>
               </span>
 
-              <!-- Live Demo Link. -->
+              <!-- Interactive Demo Link. -->
               <span class="link-block">
                 <a href="https://huggingface.co/spaces/potsawee/soda-demo"
                    class="external-link button is-normal is-rounded is-dark">
                   <span class="icon">
                       <i class="fas fa-play-circle"></i>
                   </span>
-                  <span>Live Demo</span>
+                  <span>Interactive Demo</span>
                 </a>
               </span>
 
@@ -163,9 +176,6 @@
 </section>
 
 
-
-
-
 <section class="section" style="padding-top: 25pt; background-color: #f5f5f5;">
   <div class="container is-max-desktop">
     <!-- TL;DR -->
@@ -175,15 +185,15 @@
         <div class="content has-text-justified">
           <p>
             Built on <a href="https://marin.community/">Marin</a> (an open LLM development community), this project started with a simple question:
-            <em>"If we tokenize large-scale audio data into discrete tokens, can we train a vanilla transformer—in the same way we train text LLMs—to build a unified audio backbone where every audio-text task is just next-token prediction?"</em>
+            <em>"If we tokenize large-scale audio data into discrete tokens, can we train a standard autoregressive transformer—in the same way we train text LLMs—to build a unified audio backbone where every audio-text task is just next-token prediction?"</em>
           </p>
           <p>
             We trained LLMs on sequences of discrete audio tokens, scaling from <strong>135M to 4B parameters</strong> on <strong>500B tokens</strong>.
-            To exploit existing speech-text data, we interleave speech utterances with their transcripts at the utterance level, using open data (Yodas + Emilia).
+            We leverage existing paired speech-text data by interleaving speech utterances with their transcripts at the utterance level. All training data is open (YODAS + Emilia).
           </p>
           <p>
             Along the way, we investigated design choices (data sources, text pre-training data mixtures like Nemotron-CC), 
-            studied the <a href="#scaling-laws">scaling behaviors</a> of discrete audio models, and derived compute-optimal allocation strategies.
+            studied the <a href="#scaling-laws">scaling behavior</a> of discrete audio models, and derived compute-optimal allocation strategies.
           </p>
           <p>
             <strong>SODA</strong> is a unified pre-trained audio backbone where any audio-language task can be formulated as next-token prediction—through prompting and/or fine-tuning.
@@ -240,7 +250,7 @@
             Under our setup (100 audio tokens/sec with the Mimi tokenizer), 
             optimal data grows <strong>1.6× faster</strong> than optimal model size 
             (<strong>N<sup>*</sup> ∝ C<sup>0.367</sup></strong>, <strong>D<sup>*</sup> ∝ C<sup>0.579</sup></strong>), 
-            landing in a similar ballpark to text LLM scaling studies that attributed this trend to low information density of training tokens.
+            landing in a similar ballpark to text LLM scaling studies that attributed this trend to the lower information density of training tokens.
           </p>
         </div>
 
@@ -249,7 +259,7 @@
         <h3 class="title is-4">Can We Predict What Happens at Scale?</h3>
         <div class="content has-text-justified">
           <p>
-            Using those 64 models, we mapped how each skill improves as validation loss decreases.
+            Using those 64 models, we mapped how each capability (e.g., speech knowledge, ASR) improves as validation loss decreases.
             Then we trained our full SODA models (135M → 4B) and checked: <em>do the trends hold?</em>
             The SODA models (<strong>★</strong>) land right on the curves predicted by the smaller runs (<strong>●</strong>)—these results suggest that <em>capabilities scale predictably</em> similar to text LLMs.
           </p>
@@ -303,15 +313,20 @@
         <div class="content has-text-justified">
           <p>
             SODA treats all audio language tasks—whether text-to-audio, audio-to-text, or audio continuation—as simple <strong>next-token prediction</strong> problems. By doing utterance-level interleaving of discrete audio tokens with corresponding text tokens, we can formulate diverse tasks using standard prompting strategies.
+            You can try SODA yourself in our <a href="https://huggingface.co/spaces/potsawee/soda-demo"><strong>Interactive Demo</strong></a>.
           </p>
           <p>
             Below is the pseudo-code for prompting SODA to perform audio continuation, zero-shot TTS, and ASR, as used in our demo:
           </p>
           <pre style="background-color: #f5f5f5; padding: 1em; font-size: 0.9em; border-radius: 4px; overflow-x: auto;"><code># Audio Continuation
 Prompt:  &lt;|audio_start|&gt; {audio_context}
-Predict: {continued_audio_tokens} # Text tokens (if generated) are omitted in audio convertion
+Predict: {continued_audio_tokens} # Text tokens (if generated) are omitted in audio conversion
 
-# Zero-Shot TTS (Voice Cloning)
+# TTS (Unconditioned)
+Prompt:  &lt;|text_start|&gt; {text} &lt;|text_end|&gt; &lt;|audio_start|&gt;
+Predict: {audio_tokens} &lt;|audio_end|&gt;
+
+# TTS (Voice Conditioned)
 Prompt:  &lt;|text_start|&gt; {text} &lt;|text_end|&gt; &lt;|audio_start|&gt; {prompt_audio} &lt;|audio_end|&gt; \
          &lt;|text_start|&gt; {target_text} &lt;|text_end|&gt; &lt;|audio_start|&gt;
 Predict: {target_audio_tokens} &lt;|audio_end|&gt;
@@ -323,7 +338,7 @@ Predict: {transcribed_text_tokens} &lt;|text_end|&gt;</code></pre>
         </div>
 
         <p style="font-size: 0.9em; color: #666; font-style: italic; margin-top: 0.5rem;">
-          Note: Other audio-language tasks can be similarly formulated as next-token prediction, though effective performance requires fine-tuning as emergence (e.g., in-context learning skills) is not yet observed. See inference examples in <a href="https://huggingface.co/soda-research/soda-4b-base">SODA-4B-base</a>.
+          Note: Other audio-language tasks can be similarly formulated as next-token prediction, though effective performance on other tasks typically requires fine-tuning, as in-context learning has not yet emerged at this scale. See inference examples in <a href="https://huggingface.co/soda-research/soda-4b-base">SODA-4B-base</a>.
         </p>
 
 
@@ -331,7 +346,7 @@ Predict: {transcribed_text_tokens} &lt;|text_end|&gt;</code></pre>
         <!-- Audio Continuation -->
         <h4 class="title is-5" style="margin-top: 2.5rem; color: #e06060;">Audio Continuation (Speech Utterance)</h4>
         <p style="font-size: 0.9em; color: #818589; margin-top: -0.5rem; margin-bottom: 1rem;">*Speech prompts and corresponding baseline outputs are taken from existing project page demos (e.g., <a href="https://pages.cs.huji.ac.il/adiyoss-lab/sims/" style="color: #818589;">SIMS</a>, <a href="https://speechbot.github.io/spiritlm/" style="color: #818589;">SpiritLM</a>, <a href="https://speed1313.github.io/llama-mimi/" style="color: #818589;">Llama-Mimi</a>).</p>
-        <p style="font-size: 0.9em; color: #818589; margin-top: -0.5rem; margin-bottom: 1rem;">1) SpiritLM and SIMS model only <span style="text-decoration: underline;">semantic tokens</span> with fixed vocoders, hence cannot maintain voice characteristics in their continuations.</p>
+        <p style="font-size: 0.9em; color: #818589; margin-top: -0.5rem; margin-bottom: 1rem;">1) SpiritLM and SIMS model only <span style="text-decoration: underline;">semantic tokens</span> with fixed vocoders, so they do not maintain voice characteristics in their continuations.</p>
         <p style="font-size: 0.9em; color: #818589; margin-top: -0.5rem; margin-bottom: 1rem;">2) Llama-Mimi and SODA model both <span style="text-decoration: underline;">semantic and acoustic tokens</span>, allowing them to maintain voice characteristics.</p>
 
 
@@ -347,7 +362,7 @@ Predict: {transcribed_text_tokens} &lt;|text_end|&gt;</code></pre>
           <!-- Prompt -->
           <div style="flex: 1;">
             <audio controls style="width: 100%; height: 40px;">
-              <source src="./static/audio/speech_cont0_input.mp3" type="audio/wav">
+              <source src="./static/audio/speech_cont0_input.mp3" type="audio/mpeg">
             </audio>
             <p style="font-size: 0.75em; color: #888; margin-top: 0.2em;"><strong>Source:</strong> <a href="https://pages.cs.huji.ac.il/adiyoss-lab/sims/" style="color: #209cee;">SIMS Demo</a></p>
             <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Transcript:</strong> This is a story of a tiny talking computer</p>
@@ -355,7 +370,7 @@ Predict: {transcribed_text_tokens} &lt;|text_end|&gt;</code></pre>
           <!-- Existing Model -->
           <div style="flex: 2;">
             <audio controls style="width: 100%; height: 40px;">
-              <source src="./static/audio/speech_cont0_output_simsQwen7B.m4a" type="audio/wav">
+              <source src="./static/audio/speech_cont0_output_simsQwen7B.m4a" type="audio/mp4">
             </audio>
             <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Model:</strong> SIMS-Qwen2.5-7B</p>
             <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Transcript:</strong> these computers are now in the pockets on the desks in the cars of many of you think of your names know where you</p>
@@ -374,7 +389,7 @@ Predict: {transcribed_text_tokens} &lt;|text_end|&gt;</code></pre>
           <!-- Prompt -->
           <div style="flex: 1;">
             <audio controls style="width: 100%; height: 40px;">
-              <source src="./static/audio/speech_cont1_input.mp3" type="audio/wav">
+              <source src="./static/audio/speech_cont1_input.mp3" type="audio/mpeg">
             </audio>
             <p style="font-size: 0.75em; color: #888; margin-top: 0.2em;"><strong>Source:</strong> <a href="https://pages.cs.huji.ac.il/adiyoss-lab/sims/" style="color: #209cee;">SIMS Demo</a></p>
             <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Transcript:</strong> The capital of England is</p>
@@ -382,7 +397,7 @@ Predict: {transcribed_text_tokens} &lt;|text_end|&gt;</code></pre>
           <!-- Existing Model -->
           <div style="flex: 2;">
             <audio controls style="width: 100%; height: 40px;">
-              <source src="./static/audio/speech_cont1_output_simsQwen7B.m4a" type="audio/wav">
+              <source src="./static/audio/speech_cont1_output_simsQwen7B.m4a" type="audio/mp4">
             </audio>
             <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Model:</strong> SIMS-Qwen2.5-7B</p>
             <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Transcript:</strong> and ever has been the center of the wheel of Finance and here, the price of everything and everywhere</p>
@@ -523,7 +538,7 @@ Predict: {transcribed_text_tokens} &lt;|text_end|&gt;</code></pre>
 
 
         <!-- Zero-shot TTS -->
-        <h4 class="title is-5" style="margin-top: 1.5rem; color: #e06060;">Zero-shot TTS</h4>
+        <h4 class="title is-5" style="margin-top: 1.5rem; color: #e06060;">TTS (Voice-Conditioned)</h4>
         <!-- Column Headers -->
         <div style="display: flex; gap: 16px; margin-bottom: 0.5rem;">
           <div style="flex: 1; font-weight: bold; font-size: 0.95em;">Source Voice</div>
