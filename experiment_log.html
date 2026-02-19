@@ -38,7 +38,7 @@
                   <span class="icon">
                       <i class="fas fa-home"></i>
                   </span>
-                  <span>Back to Project Page</span>
+                  <span>Back to Home Page</span>
                 </a>
               </span>
             </div>
@@ -156,7 +156,7 @@
             This page serves as a record of the experiments conducted during the development of SODA. This log documents 
             our journey and technical nuances of the project, which may not be covered in the main paper.
             <br><br>
-            The project started with simple questions: "If we tokenize large-scale audio data into discrete tokens, can we train a vanilla transformer model (e.g., Llama or Qwen architecture in the same manner as <a href="https://marin.community/">Marin</a> for LLMs) to generate next audio frames? how do we exploit existing audio and text data for a broader set of skills? does the model have any meaningful capabilities? and how does it scale up?"
+            The project started with simple questions: "If we tokenize large-scale audio data into discrete tokens, can we train a vanilla transformer model (e.g., Llama or Qwen architecture in the same manner as <a href="https://marin.community/">Marin</a> for LLMs) to generate next audio frames? How do we exploit existing audio and text data for a broader set of skills? Does the model have any meaningful capabilities? And how does it scale up?"
           </p>
         </div>
 
@@ -195,7 +195,7 @@
           </p>
           
           <p>
-            <strong>Note on Implementation:</strong> We map discrete audio token indices (0–16383) to Unicode characters in the Private Use Area (offset <code>0xE000</code>), 
+            <strong>Note on Implementation:</strong> We map discrete audio tokens (0–16383) to Unicode characters in a Private Use Area (PUA) with offset <code>0xE000</code>, 
             so each audio token becomes a single character. This allows us to treat interleaved audio-text sequences as plain strings, 
             enabling use of existing Marin LLM infrastructure and efficient storage. 
             See <a href="https://huggingface.co/soda-research/marin-mimi-bpe-8cb-16k-tokenizer">our tokenizer</a> for usage.
@@ -473,23 +473,23 @@ def str_to_audio(audio_str: str, mimi_model: MimiModel, device: str) -> np.ndarr
               </thead>
               <tbody>
                 <tr>
-                  <td>SpritLM-base-7B</td>
+                  <td>SpiritLM-base-7B</td>
                   <td>57.2</td>
                   <td>69.0</td>
                   <td>58.3</td>
                   <td>36.9</td>
                   <td>21.9</td>
-                  <td>~4x.x</td>
+                  <td>~40†</td>
                   <td>~0.05</td>
                 </tr>
                 <tr>
-                  <td>SpritLM-Expr-7B</td>
+                  <td>SpiritLM-Expr-7B</td>
                   <td>67.1</td>
                   <td>65.0</td>
                   <td>54.2</td>
                   <td>?</td>
                   <td>37.9</td>
-                  <td>~5x.x</td>
+                  <td>~50†</td>
                   <td>~0.10</td>
                 </tr>
                 <tr>
@@ -524,7 +524,10 @@ def str_to_audio(audio_str: str, mimi_model: MimiModel, device: str) -> np.ndarr
                 </tr>
               </tbody>
             </table>
-            <p class="help">SpiritLM TTS estimated from reported results on another dataset. ∅ indicates no skills. ASR: LibriSpeech (test-clean), TTS: seed-tts-eval.</p>
+            <p class="help">
+              ∅ indicates no skills. ASR: LibriSpeech (test-clean), TTS: seed-tts-eval. 
+              †SpiritLM uses 10-shot eval on LibriSpeech-clean for ASR/TTS; ours is 0-shot with TTS on seed-tts-eval, and these numbers only serve as an estimate.
+            </p>
           </div>
 
           <h3 id="prelim-findings">Findings</h3>
@@ -975,13 +978,20 @@ def str_to_audio(audio_str: str, mimi_model: MimiModel, device: str) -> np.ndarr
               This is qualitatively different from text models, where a replication attempt (Besiroglu et al.) found the ratio actually <em>decreases</em> with compute.
             </li>
           </ol>
+
+          <br>
+
+          <p>
+            <strong>🤗 Artifacts:</strong> The collection of IsoFLOP checkpoints is available on HF: 
+            <a href="https://huggingface.co/collections/soda-research/discrete-audio-isoflop-models">soda-research/discrete-audio-isoflop-models</a>.
+          </p>          
           
           <h3 id="isoflop-parametric">Parametric Loss Prediction</h3>
           <p>
-            Beyond identifying compute-optimal allocations, we also want to <em>predict</em> the final validation loss 
+            In addition to identifying compute-optimal allocations, we want to <em>predict</em> the expected final validation loss 
             for models trained at larger compute budgets — including over-trained configurations where the model is 
-            trained on more data than its compute-optimal amount, for example, our SODA-LongRun experiments in a subsequent section.
-            To preict final validation loss, we fit the parametric equation from 
+            trained on more data than its compute-optimal amount (e.g., our SODA-LongRun experiments in a subsequent section).
+            To predict final validation loss, we fit the parametric equation similar to the approach in 
             <a href="https://arxiv.org/abs/2203.15556">Chinchilla</a>:
           </p>
           <div style="background-color: #f5f5f5; padding: 1em; font-size: 1.1em; border-radius: 4px; text-align: center; font-family: 'Noto Sans', sans-serif;">
@@ -1053,13 +1063,6 @@ def str_to_audio(audio_str: str, mimi_model: MimiModel, device: str) -> np.ndarr
             Despite these prediction challenges, downstream task performance scales reliably with validation loss 
             (see <a href="#nll-correlation">Correlation section</a>), 
             making validation loss a useful proxy even when absolute loss predictions are imperfect.
-          </p>
-
-          <br>
-
-          <p>
-            <strong>🤗 Artifacts:</strong> The collection of IsoFLOP checkpoints is available on HF: 
-            <a href="https://huggingface.co/collections/soda-research/discrete-audio-isoflop-models">soda-research/discrete-audio-isoflop-models</a>.
           </p>
 
         </div>
@@ -1660,10 +1663,10 @@ def str_to_audio(audio_str: str, mimi_model: MimiModel, device: str) -> np.ndarr
         <div class="content has-text-justified">
           <h2 id="open-questions">Open Questions & Future Directions</h2>
           <p>
-            While this work establishes a scaling law and training recipes for discrete audio models, there remains some interesting open questions for future work. 
+            While this work establishes a scaling law and training recipes for discrete audio models, there remain some interesting open questions for future work. 
           </p>
 
-          <h4 style="margin-top: 1em;">1. Where is the Emergence?</h3>
+          <h4 style="margin-top: 1em;">1. Where is the Emergence?</h4>
           <p>
             Unlike text LLMs which exhibit emergent capabilities at scale (e.g., unseen skills like arithmetic, reasoning, in-context learning), 
             this work did not observe strong emergent speech or audio capabilities from pre-training alone. Our models require fine-tuning to unlock their full potential, similar to the BERT/BART/GPT-2 era in NLP.
@@ -1676,7 +1679,7 @@ def str_to_audio(audio_str: str, mimi_model: MimiModel, device: str) -> np.ndarr
 
           <h4 style="margin-top: 1em;">2. Resolving the Semantic-Acoustic Trade-off</h4>
           <p>
-            Our results show a trade-offbetween <strong>what</strong> is said (semantic) and <strong>how</strong> it is said (acoustic). 
+            Our results show a trade-off between <strong>what</strong> is said (semantic) and <strong>how</strong> it is said (acoustic). 
             Adding acoustic tokens improves fidelity but degrades semantic understanding (sBLIMP/sWUGGY drop).
           </p>
           <ul>
@@ -1691,16 +1694,16 @@ def str_to_audio(audio_str: str, mimi_model: MimiModel, device: str) -> np.ndarr
           <ul>
             <li><strong>Alternative Tokenizers:</strong> Would other tokenizers perform better or yield different patterns?</li>
             <li><strong>Sampling Rates:</strong> We used a fixed frame rate. What is the optimal token-to-second ratio for efficiency vs fidelity?</li>
-            <li><strong> Disentanglement:</strong> Can we design tokenizers that explicitly disentangle content/semantics from speaker identity/prosody?</li>
+            <li><strong>Disentanglement:</strong> Can we design tokenizers that explicitly disentangle content/semantics from speaker identity/prosody?</li>
           </ul>
 
           <h4 style="margin-top: 1em;">4. Data Scaling Laws for Audio</h4>
           <p>
-            We found that optimal data size scales 1.6× faster than model size ($D \propto N^{1.6}$), 
-            consistent with the hypothesis that discrete audio tokens have lower information density (`lower entropy`) than text tokens.
+            We found that optimal data size scales 1.6× faster than model size (D* &prop; N*<sup>1.6</sup>), 
+            consistent with the hypothesis that discrete audio tokens have lower information density (lower entropy) than text tokens.
           </p>
           <ul>
-            <li><strong>Question:</strong> Does this exponent hold for larger models, or does it saturate? or general audio data (beyond just speech)?</li>
+            <li><strong>Question:</strong> Does this exponent hold for larger models, or does it saturate? Or general audio data (beyond just speech)?</li>
             <li><strong>Question:</strong> How does this ratio change with better audio tokenizers (higher compression)?</li>
           </ul>
 
@@ -1720,7 +1723,24 @@ def str_to_audio(audio_str: str, mimi_model: MimiModel, device: str) -> np.ndarr
   </div>
 </section>
 
-
+<footer class="footer">
+  <div class="container">
+    <div class="content has-text-centered">
+    </div>
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="content">
+          <p>
+            We thank <a href="https://marin.community/">Marin</a> and <a href="https://www.openathena.ai/">OpenAthena</a> for developing and maintaining the training infrastructure. We are particularly grateful to <a href="https://x.com/dlwh">David Hall</a> for his support with infrastructure and LLM pre-training. The compute resource was supported by the Google TPU Research Cloud (TRC) and a Stanford HAI–GCP Grant as part of the Marin Project. PM is supported by SCB 10X for his joint-position at Stanford. We also thank SALT Lab and Typhoon members for helpful discussions.
+          </p>
+          <p>
+            This website uses the <a href="https://github.com/nerfies/nerfies.github.io">Nerfies template</a>, which is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike 4.0 International License</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
 
 </body>
 </html>
