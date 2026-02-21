@@ -216,11 +216,11 @@
 
         <div class="content has-text-justified" style="background-color: #f9f9f9; border-left: 4px solid #ccc; padding: 1em 1.25em; border-radius: 4px; margin-bottom: 2rem;">
           <p style="margin: 0;">
-            A central question for building foundation models is: <em>how should we invest compute budget?</em>
+            An interesting question for building foundation models is: <em>how should we invest compute budget?</em>
             This requires two pieces:
-            <strong>(1)</strong> establishing that validation loss (e.g., NLL on held-out speech data) reliably predicts downstream capabilities — so that minimizing NLL is a meaningful target — and
-            <strong>(2)</strong> determining how to allocate compute between model size and data to achieve the lowest NLL.
-            We study both below.
+            <strong>(1)</strong> understanding how downstream capabilities change as validation loss (e.g., NLL on held-out speech data) decreases — do they improve rapidly, slowly, or plateau? and
+            <strong>(2)</strong> if capabilities do improve with lower NLL — making it a meaningful optimization target — how should we allocate compute between model size and data to minimize it?
+            <!-- We study both below. -->
           </p>
         </div>
 
