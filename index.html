@@ -213,6 +213,17 @@
     <!-- Scaling Laws. -->
     <div class="columns is-centered" id="scaling-laws" style="margin-top: 1.5rem; padding-top: 1rem;">
       <div class="column is-full-width">
+
+        <div class="content has-text-justified" style="background-color: #f9f9f9; border-left: 4px solid #ccc; padding: 1em 1.25em; border-radius: 4px; margin-bottom: 2rem;">
+          <p style="margin: 0;">
+            A central question for building foundation models is: <em>how should we invest compute budget?</em>
+            This requires two pieces:
+            <strong>(1)</strong> establishing that validation loss (e.g., NLL on held-out speech data) reliably predicts downstream capabilities — so that minimizing NLL is a meaningful target — and
+            <strong>(2)</strong> determining how to allocate compute between model size and data to achieve the lowest NLL.
+            We study both below.
+          </p>
+        </div>
+
         <h3 class="title is-4">How Does Discrete Audio Scale?</h3>
 
         <div class="content has-text-justified">
@@ -316,7 +327,7 @@
         <div class="content has-text-justified">
           <p>
             SODA treats all audio language tasks—whether text-to-audio, audio-to-text, or audio continuation—as simple <strong>next-token prediction</strong> problems. By doing utterance-level interleaving of discrete audio tokens with corresponding text tokens, we can formulate diverse tasks using standard prompting strategies.
-            You can try SODA yourself in our <a href="https://huggingface.co/spaces/potsawee/soda-demo"><strong>Interactive Demo</strong></a>.
+            You can try SODA yourself in our 🎮 <a href="https://huggingface.co/spaces/potsawee/soda-demo"><strong>Interactive Demo</strong></a>.
           </p>
           <p>
             Below is the pseudo-code for prompting SODA to perform audio continuation, zero-shot TTS, and ASR, as used in our demo:
