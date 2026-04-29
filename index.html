@@ -657,6 +657,127 @@ Predict: {transcribed_text_tokens} &lt;|text_end|&gt;</code></pre>
           </div>
         </div>
 
+        <!-- Voice-Preserving S2ST -->
+        <h4 class="title is-5" id="s2st" style="margin-top: 2.5rem; color: #e06060;">Voice-Preserving Speech-to-Speech Translation (X → En)</h4>
+        <p style="font-size: 0.9em; color: #818589; margin-top: -0.5rem; margin-bottom: 1rem;">*Unlike the other examples on this page (which use the pre-trained <strong>SODA-4B-base</strong>), the samples below come from <strong>SODA-600M fine-tuned</strong> on <a href="https://huggingface.co/datasets/google/cvss" style="color: #818589;">CVSS-T</a> for voice-preserving X→En translation. The fine-tuning uses the same decoder-only transformer and next-token-prediction objective—no architectural modifications, no speaker embedding modules, no separate decoder. The input sequence is simply formatted as: <em>source audio → source text → target text → target audio</em>. See §6.3 of the paper for full evaluation results.</p>
+        <p style="font-size: 0.9em; color: #818589; margin-top: -0.5rem; margin-bottom: 1rem;">Listen for how the generated English translation preserves the speaker's voice characteristics from the source audio.</p>
+
+        <!-- Column Headers -->
+        <div style="display: flex; gap: 16px; margin-bottom: 0.5rem;">
+          <div style="flex: 1; font-weight: bold; font-size: 0.95em;">Source Audio</div>
+          <div style="flex: 1; font-weight: bold; font-size: 0.95em;">Translated Speech</div>
+          <div style="flex: 2; font-weight: bold; font-size: 0.95em;">Transcripts</div>
+        </div>
+
+        <!-- Spanish -->
+        <div style="display: flex; gap: 16px; margin-bottom: 1.5rem; padding: 12px 0; border-top: 1px solid #eee;">
+          <div style="flex: 1;">
+            <audio controls style="width: 100%; height: 40px;">
+              <source src="./static/audio/s2st/input/common_voice_es_19665866.wav" type="audio/wav">
+            </audio>
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Language:</strong> Spanish</p>
+          </div>
+          <div style="flex: 1;">
+            <audio controls style="width: 100%; height: 40px;">
+              <source src="./static/audio/s2st/output/common_voice_es_19665866.wav" type="audio/wav">
+            </audio>
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>SIM:</strong> 0.58</p>
+          </div>
+          <div style="flex: 2;">
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Source:</strong> Sin embargo, la canción sí fue incluida en la versión estadounidense del álbum.</p>
+
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Generated:</strong> however the song was included in the american version of the album</p>
+          </div>
+        </div>
+
+        <!-- French -->
+        <!-- <div style="display: flex; gap: 16px; margin-bottom: 1.5rem; padding: 12px 0; border-top: 1px solid #eee;">
+          <div style="flex: 1;">
+            <audio controls style="width: 100%; height: 40px;">
+              <source src="./static/audio/s2st/input/common_voice_fr_19813697.wav" type="audio/wav">
+            </audio>
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Language:</strong> French</p>
+          </div>
+          <div style="flex: 1;">
+            <audio controls style="width: 100%; height: 40px;">
+              <source src="./static/audio/s2st/output/common_voice_fr_19813697.wav" type="audio/wav">
+            </audio>
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>SIM:</strong> 0.56</p>
+          </div>
+          <div style="flex: 2;">
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Source:</strong> C'est la partie la plus ancienne du château.</p>
+
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Generated:</strong> it is the oldest part of the castle</p>
+          </div>
+        </div> -->
+
+        <!-- German -->
+        <div style="display: flex; gap: 16px; margin-bottom: 1.5rem; padding: 12px 0; border-top: 1px solid #eee;">
+          <div style="flex: 1;">
+            <audio controls style="width: 100%; height: 40px;">
+              <source src="./static/audio/s2st/input/common_voice_de_18192756.wav" type="audio/wav">
+            </audio>
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Language:</strong> German</p>
+          </div>
+          <div style="flex: 1;">
+            <audio controls style="width: 100%; height: 40px;">
+              <source src="./static/audio/s2st/output/common_voice_de_18192756.wav" type="audio/wav">
+            </audio>
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>SIM:</strong> 0.56</p>
+          </div>
+          <div style="flex: 2;">
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Source:</strong> Diese Interaktion war erfolgreich.</p>
+
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Generated:</strong> this interaction was successful</p>
+          </div>
+        </div>
+
+        <!-- Italian -->
+        <div style="display: flex; gap: 16px; margin-bottom: 1.5rem; padding: 12px 0; border-top: 1px solid #eee;">
+          <div style="flex: 1;">
+            <audio controls style="width: 100%; height: 40px;">
+              <source src="./static/audio/s2st/input/common_voice_it_20057505.wav" type="audio/wav">
+            </audio>
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Language:</strong> Italian</p>
+          </div>
+          <div style="flex: 1;">
+            <audio controls style="width: 100%; height: 40px;">
+              <source src="./static/audio/s2st/output/common_voice_it_20057505.wav" type="audio/wav">
+            </audio>
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>SIM:</strong> 0.39</p>
+          </div>
+          <div style="flex: 2;">
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Source:</strong> Il nastro era completamente rosso.</p>
+
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Generated:</strong> the master was completely red</p>
+          </div>
+        </div>
+
+        <!-- Chinese -->
+        <div style="display: flex; gap: 16px; margin-bottom: 1.5rem; padding: 12px 0; border-top: 1px solid #eee;">
+          <div style="flex: 1;">
+            <audio controls style="width: 100%; height: 40px;">
+              <source src="./static/audio/s2st/input/common_voice_zh-CN_18978168.wav" type="audio/wav">
+            </audio>
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Language:</strong> Chinese</p>
+          </div>
+          <div style="flex: 1;">
+            <audio controls style="width: 100%; height: 40px;">
+              <source src="./static/audio/s2st/output/common_voice_zh-CN_18978168.wav" type="audio/wav">
+            </audio>
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>SIM:</strong> 0.61</p>
+          </div>
+          <div style="flex: 2;">
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Source:</strong> 位于锦州市西南部。</p>
+
+            <p style="font-size: 0.8em; color: #555; margin-top: 0.4em;"><strong>Generated:</strong> it is located in the city of xinampu</p>
+          </div>
+        </div>
+
+        <p style="font-size: 0.9em; color: #666; font-style: italic; margin-top: 0.5rem;">
+          SIM = speaker similarity between source and generated audio. See Table 3 in the paper for full quantitative results.
+        </p>
+
       </div>
     </div>
     <!--/ Audio Samples. -->
