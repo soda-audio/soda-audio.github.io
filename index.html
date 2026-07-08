@@ -92,9 +92,10 @@
             <span class="author-block"><sup>5</sup>University of Cambridge</span>
           </div>
 
-          <div class="is-size-5 publication-authors">
-            <span class="author-block" style="font-family: monospace; font-size: 0.9em;">
-              <i class="fas fa-envelope" style="font-size: 0.95em; margin-right: 0.2em; vertical-align: middle;"></i>{potsawee, held, diyiy}@stanford.edu
+          <div class="is-size-5 publication-authors" style="color: #888;">
+            <span class="author-block" style="font-size: 0.9em;">
+              <i class="fas fa-envelope" style="font-size: 0.95em; margin-right: 0.3em; vertical-align: middle;"></i><a href="#" id="contact-link" rel="nofollow" style="color: #888 !important;">Email Contact</a>
+              <span id="contact-copied" style="display: none; margin-left: 0.5em; color: #888; font-size: 0.85em;">(copied to clipboard!)</span>
             </span>
           </div>
 
@@ -818,5 +819,36 @@ Predict: {transcribed_text_tokens} &lt;|text_end|&gt;</code></pre>
   </div>
 </footer>
 
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var user = String.fromCharCode(109, 46, 112, 111, 116, 115, 97, 119, 101, 101);
+    var domain = String.fromCharCode(103, 109, 97, 105, 108, 46, 99, 111, 109);
+    var address = user + '@' + domain;
+    var link = document.getElementById('contact-link');
+    var note = document.getElementById('contact-copied');
+    if (!link) return;
+
+    link.setAttribute('href', 'mailto:' + address);
+    link.addEventListener('click', function () {
+      var showNote = function () {
+        if (!note) return;
+        note.style.display = 'inline';
+        setTimeout(function () { note.style.display = 'none'; }, 2000);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(address).then(showNote, function () {});
+      } else {
+        var textarea = document.createElement('textarea');
+        textarea.value = address;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        try { document.execCommand('copy'); showNote(); } catch (e) {}
+        document.body.removeChild(textarea);
+      }
+    });
+  });
+</script>
 </body>
 </html>
