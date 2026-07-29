@@ -1,0 +1,1534 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="description" content="SODA: flattened vs. hierarchical factorization for discrete audio language models">
+  <meta name="keywords"
+    content="Audio Foundation Models, Discrete Audio, Speech Language Models, Hierarchical, RVQ, SODA">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SODA: Hierarchical Models</title>
+
+  <!-- Open Graph / Social Media -->
+  <meta property="og:title" content="Flattened vs. Hierarchical SODA Models">
+  <meta property="og:description"
+    content="A compute-matched comparison of flattened and hierarchical factorizations for discrete audio LMs, and a 1.1B scale-up of the winning recipe">
+  <meta property="og:image" content="https://soda-audio.github.io/static/images/og_image.jpg">
+  <meta property="og:url" content="https://soda-audio.github.io/hierarchical.html">
+  <meta property="og:type" content="website">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Flattened vs. Hierarchical SODA Models">
+  <meta name="twitter:description"
+    content="A compute-matched comparison of flattened and hierarchical factorizations for discrete audio LMs, and a 1.1B scale-up of the winning recipe">
+  <meta name="twitter:image" content="https://soda-audio.github.io/static/images/og_image.jpg">
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
+
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+  <link rel="icon" href="./static/images/favicon.jpg">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+</head>
+
+<body>
+
+  <section class="hero">
+    <div class="hero-body">
+      <div class="container is-max-desktop">
+        <div class="columns is-centered">
+          <div class="column has-text-centered">
+            <h1 class="title is-2 publication-title">Flattened vs. Hierarchical SODA Models</h1>
+            <h2 class="subtitle is-4">A compute-matched comparison, and a 1.1B scale-up of the winning recipe</h2>
+            <p style="color: #888; margin-top: -0.5rem;">Update &mdash; July 2026</p>
+
+            <div class="column has-text-centered" style="padding-top: 30px;">
+              <div class="publication-links">
+                <!-- Back to Main Page Link. -->
+                <span class="link-block">
+                  <a href="index.html" class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon">
+                      <i class="fas fa-home"></i>
+                    </span>
+                    <span>Back to Home Page</span>
+                  </a>
+                </span>
+
+                <!-- Code Link. -->
+                <span class="link-block">
+                  <a href="https://github.com/potsawee/marin/tree/soda-extension/experiments/audio"
+                    class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon">
+                      <i class="fab fa-github"></i>
+                    </span>
+                    <span>Project Code</span>
+                  </a>
+                </span>
+
+                <!-- W&B Link. -->
+                <span class="link-block">
+                  <a href="https://wandb.ai/potsawee/soda-extension"
+                    class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon">
+                      <i class="fas fa-chart-line"></i>
+                    </span>
+                    <span>Training Logs</span>
+                  </a>
+                </span>
+
+                <!-- Model Weights Link. -->
+                <span class="link-block">
+                  <a href="https://huggingface.co/collections/soda-research/hierarchical-models"
+                    class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon">
+                      <img src="./static/images/hf-logo-bw.svg" style="width: 20px;">
+                    </span>
+                    <span>Model Weights</span>
+                  </a>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <section class="section" style="padding-top: 0;">
+    <div class="container is-max-desktop">
+
+      <!-- Why. -->
+      <div class="columns is-centered">
+        <div class="column is-full-width">
+
+          <div class="content has-text-justified"
+            style="background-color: #f9f9f9; border-left: 4px solid #ccc; padding: 1em 1.25em; border-radius: 4px; margin-bottom: 2rem;">
+            <p style="margin: 0;">
+              SODA answered <em>how to scale</em> a flattened discrete-audio LM. It did not answer whether flattening is
+              the right thing to scale.
+              So: <strong>at matched training compute, does a CSM/Moshi-style hierarchical factorization model speech
+                better?</strong>
+            </p>
+          </div>
+
+          <div class="content" style="margin-bottom: 2.5rem;">
+            <p class="menu-label" style="margin-bottom: 0.5rem;">Contents</p>
+            <ol style="margin-top: 0;">
+              <li><a href="#why">Why This Experiment</a></li>
+              <li><a href="#setup">What We Ran</a></li>
+              <li><a href="#nll">Finding 1: No Single NLL Number Can Rank Architectures</a></li>
+              <li><a href="#axis-split">Finding 2: Hierarchical Owns Semantics, Flattened Owns Acoustics</a></li>
+              <li><a href="#weighting">Finding 3: How Much Does the Loss Weighting Matter?</a></li>
+              <li><a href="#secondary">Finding 4: Width, Depth Size, Budget, and Decode Cost</a></li>
+              <li><a href="#soda-hier">SODA-Hier: Scaling up p5 to 1&times;10<sup>20</sup> FLOPs</a></li>
+              <li><a href="#bracket">Against Compute-Optimal Flattened Models at a similar scale</a></li>
+            </ol>
+          </div>
+
+          <h2 id="why" class="title is-4">Why This Experiment</h2>
+
+          <div class="content has-text-justified">
+            <p>
+              SODA turns each 80&nbsp;ms audio frame into 8 Mimi RVQ tokens (1 semantic + 7 acoustic) and
+              <em>flattens</em> them into one long
+              stream, which a single decoder models with uniform cross-entropy. Our <a
+                href="index.html#scaling-laws">scaling study</a> derived
+              compute-optimal allocation rules for that setup. But an allocation rule only covers the design space it
+              was fit on&mdash;if a different
+              factorization has a different frontier, the rules move with it. Testing that is the natural next step on
+              our own result.
+            </p>
+            <p>
+              The alternative, such as
+              <a href="https://www.sesame.com/blog/crossing-the-uncanny-valley-of-voice">CSM (Sesame)</a> and
+              <a href="https://arxiv.org/abs/2410.00037">Moshi (Kyutai)</a>, factorizes <em>hierarchically</em>: a
+              backbone transformer whose
+              positions are &ldquo;steps&rdquo; (one text token, or one whole audio frame summed from its codebook
+              embeddings), plus a small depth
+              transformer that predicts the remaining acoustic codebooks inside each frame. It is what much of the field
+              builds. Comparisons
+              between the two families, though, tend to differ in data, tokenizer and compute budget as well as in
+              factorization, which makes the
+              contribution of the factorization itself hard to isolate. We built this campaign so the two arms differ in
+              exactly one thing.
+            </p>
+            <p>
+              There is also a standing practical reason to want the answer before scaling further. The hierarchy carries
+              a KV cache of length
+              <em>T</em> instead of 8<em>T</em>, and decodes audio for roughly <strong>7&times; fewer FLOPs per
+                generated second</strong>. If it is
+              also competitive in quality, that changes what is worth serving.
+            </p>
+            <p>Two positions this study could support:</p>
+            <ul>
+              <li><strong>Flattened.</strong> Within-frame left-to-right attention over all 8 codebooks is worth what it
+                costs, and a single head
+                over a 144,644-token vocabulary is a strong joint model.</li>
+              <li><strong>Hierarchical.</strong> Spending sequence positions 8&times; more cheaply frees backbone
+                capacity for long-range structure,
+                and a small depth transformer suffices for within-frame acoustics. We do not apply a
+                delay pattern, keeping the comparison against the flattened arm as tight as possible.</li>
+            </ul>
+          </div>
+
+          <h4 class="title is-5" style="color: #e06060;">What we found (compute-matched at 3&times;10<sup>18</sup>
+            FLOPs)</h4>
+
+          <div class="content has-text-justified">
+            <ul>
+              <li><strong>A single NLL number cannot rank the two families.</strong> An NLL is an <em>average</em> of
+                per-token bits, so it needs weights: how much should a text token count against a late acoustic one?
+                Scoring the <em>same</em> four models three different ways reverses the ranking &mdash; flattened wins
+                by
+                17% when every token counts equally, but under Moshi-style or semantic-only weighting every hierarchical
+                run beats every flattened run.</li>
+              <li><strong>The families split along a clean axis.</strong> At matched compute the hierarchy roughly
+                <em>halves</em> ASR word error
+                and wins every semantic, lexical and text benchmark that resolves above chance; the flattened model wins
+                every acoustic NLL
+                component and speaker similarity.
+              </li>
+              <li><strong>Generation reliability is structural.</strong> Every hierarchical run terminates on all 1,088
+                zero-shot TTS prompts; four of the five flattened runs &mdash; at both budgets &mdash; fail to terminate
+                on 24&ndash;71% of them, getting stuck emitting silence instead of closing the utterance, which was an
+                issue we encountered in the flattened SODA models.</li>
+              <li><strong>A graded per-codebook loss weighting is a Pareto improvement over Moshi.</strong> Moshi
+                weighting is
+                flat: text and semantic tokens count 100, and every acoustic codebook counts 1. Grading it instead
+                &mdash; weighting acoustic codebook <em>k</em> by 100<sup>(1&minus;k/7)</sup>, so the early codebooks
+                keep most of the weight and the late residuals are starved &mdash; matches or beats it on every semantic
+                metric while recovering most of its generation deficit. This is the recipe we scaled.</li>
+              <li><strong>And the split survives at scale.</strong> Carrying the recipe to SODA-Hier (1.1B,
+                1.17&times;10<sup>20</sup> FLOPs), it
+                beats a flattened model trained with 1.5&times; its compute (SODA-Flat-1.8e20) on
+                ASR and every text/lexical task&mdash;and loses to one trained with 0.77&times; its compute (SODA-Flat-9e19) on SALMon and both TTS metrics.</li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+      <!--/ Why. -->
+
+      <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 2.5rem 0;">
+
+      <!-- Setup. -->
+      <div class="columns is-centered">
+        <div class="column is-full-width">
+
+          <h2 id="setup" class="title is-4">What We Ran</h2>
+
+          <div class="content has-text-justified">
+            <p>
+              Two arms over the same Mimi RVQ tokens (8 codebooks &times; 2048 entries, 12.5&nbsp;Hz), trained on
+              utterance-level interleaved
+              speech and transcripts:
+            </p>
+            <ul>
+              <li><strong><a
+                    href="https://github.com/potsawee/marin/blob/soda-extension/experiments/audio/train_audio_lm.py">Arm
+                    F (flattened)</a></strong> &mdash; the SODA architecture: one Qwen3 decoder over the flat
+                144,644-vocab stream, 4096-token windows (&le;41&nbsp;s of audio).</li>
+              <li><strong><a
+                    href="https://github.com/potsawee/marin/blob/soda-extension/experiments/audio/model_hier.py">Arm H
+                    (hierarchical)</a></strong> &mdash; a Qwen3 <em>backbone</em> whose positions are steps,
+                with a unified 130,308-way head
+                predicting the next step's text/semantic token, plus a small Qwen3 <em>depth</em> transformer with
+                per-codebook 2048-way heads for
+                the 7 acoustic codebooks. 1024-step windows (~82&nbsp;s of audio).</li>
+            </ul>
+            <p>
+              The comparison is only meaningful when the other moving parts are controlled: the same corpus
+              (15.7B flat tokens &asymp; 42k audio-hours), the same tokenizer and id space, the same Qwen3 blocks, and
+              the same solver-derived
+              batch/learning-rate/step rules with no per-run tuning. Critically, both arms define normalized joint
+              distributions over the
+              <em>same token sequences</em>&mdash;we assert <code>flat_tokens == steps + 7 &times; frames</code> per
+              document at preprocessing.
+            </p>
+            <p>
+              Three loss recipes appear below, differing only in how much weight each token type carries in the
+              cross-entropy.
+              <strong>(i) Uniform</strong> weights every token equally&mdash;the published SODA recipe, which means 7 of
+              every 8 audio tokens are
+              late-RVQ acoustic residuals. <strong>(ii) Moshi</strong> weights text and semantic tokens 100 and acoustic
+              tokens 1, concentrating capacity
+              on content at the expense of acoustic detail. <strong>(iii) Decay</strong> is the graded middle ground
+              introduced in
+              <a href="#weighting">Finding 3</a>: acoustic weights fall geometrically across the 7 codebooks instead of
+              dropping off a cliff.
+            </p>
+            <p>
+              One scope note. A full isoflop suite is expensive&mdash;SODA's own required 64 models&mdash;and we have
+              not run one for the
+              hierarchical arm. What follows is a compute-matched comparison at the smaller budgets where such a
+              comparison is affordable, plus a
+              single scaled-up run of the recipe it selects. So we can say which factorization is better <em>at these
+                budgets</em>; we cannot draw a
+              hierarchical compute-optimal frontier.
+            </p>
+          </div>
+
+          <div class="table-container">
+            <table class="table is-bordered is-striped is-narrow is-hoverable"
+              style="font-size: 0.85em; margin: 0 auto;">
+              <thead>
+                <tr>
+                  <th>Experiment</th>
+                  <th>Budget</th>
+                  <th>What varies</th>
+                  <th>Design question</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>P1
+                  <div style="font-size: 0.9em;"><a href="https://huggingface.co/soda-research/p1-flat-uniform-b78282a0">p1-flat</a> &middot; <a href="https://huggingface.co/soda-research/p1-hier-moshi-765a7592">p1-hier</a></div>
+                  </td>
+                  <td>3&times;10<sup>18</sup></td>
+                  <td>architecture, each at its published recipe</td>
+                  <td>Which factorization wins at matched compute?</td>
+                </tr>
+                <tr>
+                  <td>P1b
+                  <div style="font-size: 0.9em;"><a href="https://huggingface.co/soda-research/p1b-hier-uniform-ddf05167">p1b-hier</a></div>
+                  </td>
+                  <td>3&times;10<sup>18</sup></td>
+                  <td>hier loss &rarr; uniform</td>
+                  <td>How much of the gap is the loss weighting rather than the architecture?</td>
+                </tr>
+                <tr>
+                  <td>P1c
+                  <div style="font-size: 0.9em;"><a href="https://huggingface.co/soda-research/p1c-flat-moshi-d6f6dbfd">p1c-flat</a></div>
+                  </td>
+                  <td>3&times;10<sup>18</sup></td>
+                  <td>flat loss &rarr; Moshi</td>
+                  <td>Completes the 2&times;2 and gives the interaction term.</td>
+                </tr>
+                <tr>
+                  <td>P5
+                  <div style="font-size: 0.9em;"><a href="https://huggingface.co/soda-research/p5-hier-decay100-9984b218">p5-hier-decay100</a></div>
+                  </td>
+                  <td>3&times;10<sup>18</sup></td>
+                  <td>hier loss &rarr; graded decay</td>
+                  <td>Moshi and uniform are the two extremes. Can a graded weighting beat both, instead of landing
+                    somewhere between them?</td>
+                </tr>
+                <tr>
+                  <td>P2
+                  <div style="font-size: 0.9em;"><a href="https://huggingface.co/soda-research/p2-flat-d512-e77aa86a">flat-d512</a> &middot; <a href="https://huggingface.co/soda-research/p2-flat-d896-93cdf5a9">flat-d896</a> &middot; <a href="https://huggingface.co/soda-research/p2-hier-d512-09a1dd5a">hier-d512</a> &middot; <a href="https://huggingface.co/soda-research/p2-hier-d896-bd9ad5e8">hier-d896</a></div>
+                  </td>
+                  <td>3&times;10<sup>18</sup></td>
+                  <td>width d &isin; {512, 896}, both arms</td>
+                  <td>Is the P1 result an artifact of d=768? Where is each arm's optimum?</td>
+                </tr>
+                <tr>
+                  <td>P3
+                  <div style="font-size: 0.9em;"><a href="https://huggingface.co/soda-research/p3-hier-dd256L2-40836f4e">dd256L2</a> &middot; <a href="https://huggingface.co/soda-research/p3-hier-dd512L6-5257372c">dd512L6</a></div>
+                  </td>
+                  <td>3&times;10<sup>18</sup></td>
+                  <td>depth-transformer size (hier)</td>
+                  <td>Does the within-frame capacity allocation matter?</td>
+                </tr>
+                <tr>
+                  <td>P4
+                  <div style="font-size: 0.9em;"><a href="https://huggingface.co/soda-research/p4-flat-d768-1b5bb9e6">p4-flat</a> &middot; <a href="https://huggingface.co/soda-research/p4-hier-d768-34d1a537">p4-hier</a></div>
+                  </td>
+                  <td>1&times;10<sup>18</sup></td>
+                  <td>compute budget</td>
+                  <td>Does the gap between the arms move with budget?</td>
+                </tr>
+                <tr style="background-color: #f5f5f5;">
+                  <td><strong>SODA-Hier</strong>
+                  <div style="font-size: 0.9em;"><a href="https://huggingface.co/soda-research/soda-hier-1.1b">soda-hier-1.1b</a></div>
+                  </td>
+                  <td>1.17&times;10<sup>20</sup></td>
+                  <td>the selected recipe, 39&times; the budget</td>
+                  <td>Do the pilots' conclusions survive an order of magnitude more compute?</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="help">
+            13 campaign runs plus the scale-up. Every run gets the same evaluation battery: teacher-forced NLL on
+            LibriSpeech dev-clean as a
+            per-token-type vector; ASR 0/2-shot WER on test-clean; zero-shot TTS on seed-tts-eval English (1,088
+            prompts, WER via
+            whisper-large-v3 and speaker similarity via WavLM); and the paired-likelihood suite (sBLIMP, sWUGGY, SALMon,
+            s/tStoryCloze, tBLIMP,
+            tWUGGY), with the speech tasks scored two ways&mdash;all-tokens-uniform and semantic-only.
+          </p>
+
+        </div>
+      </div>
+      <!--/ Setup. -->
+
+      <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 2.5rem 0;">
+
+      <!-- Finding 1. -->
+      <div class="columns is-centered">
+        <div class="column is-full-width">
+
+          <h2 id="nll" class="title is-4">Finding 1: No Single NLL Number Can Rank Architectures</h2>
+
+          <div class="content has-text-justified">
+            <p>
+              Held-out NLL is a proper scoring rule and both arms model identical token sequences, so the comparison is
+              mathematically sound. The catch is what &ldquo;the NLL&rdquo; even means when 7 of every 8 audio tokens
+              are
+              late-RVQ acoustic residuals. A scalar NLL is an <em>average</em> of per-token bits, and an average needs
+              weights: you have to decide how much a text token counts relative to a semantic one, relative to a late
+              acoustic one. Uniform cross-entropy is one such choice of weights; a weighted cross-entropy is another.
+              Training under a weighted loss is exactly maximum likelihood under the matching weights.
+            </p>
+            <p>
+              So we held the four trained 2&times;2 models fixed and re-scored each one three times, changing nothing
+              but
+              the weights used to average its per-token bits: <strong>uniform</strong> (every token counts equally),
+              <strong>Moshi</strong> (text and semantic tokens count 100, acoustic tokens 1) and
+              <strong>semantic-only</strong> (codebook 0 of each frame, nothing else). Those are deliberately the same
+              three shapes as the three training losses &mdash; which is the whole problem. Mean nats per scored token,
+              lower is better:
+            </p>
+          </div>
+
+          <div class="table-container">
+            <table class="table is-bordered is-striped is-narrow is-hoverable"
+              style="font-size: 0.85em; margin: 0 auto;">
+              <thead>
+                <tr>
+                  <th rowspan="2">Model (loss it was trained with)</th>
+                  <th colspan="3" style="text-align: center;">Weights used to score it</th>
+                </tr>
+                <tr>
+                  <th>Uniform</th>
+                  <th>Moshi 100/100/1</th>
+                  <th>Semantic-only</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>p1-flat (uniform)</td>
+                  <td><strong>3.81</strong></td>
+                  <td>2.47</td>
+                  <td>2.70</td>
+                </tr>
+                <tr>
+                  <td>p1c-flat (moshi)</td>
+                  <td>4.41</td>
+                  <td>2.43</td>
+                  <td>2.65</td>
+                </tr>
+                <tr>
+                  <td>p1b-hier (uniform)</td>
+                  <td>4.26</td>
+                  <td>2.31</td>
+                  <td>2.55</td>
+                </tr>
+                <tr>
+                  <td>p1-hier (moshi)</td>
+                  <td>4.43</td>
+                  <td><strong>2.25</strong></td>
+                  <td><strong>2.49</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="help">
+            Rows are four fixed models; columns are three ways of averaging their per-token bits. Bold = best in that
+            column. Under uniform scoring the flattened model wins by 17%. Under the Moshi weights the ranking flips
+            completely &mdash; every hierarchical run beats every flattened run, and even within one architecture the
+            moshi-trained model overtakes the uniform one (2.43 &lt; 2.47). Semantic-only scoring produces another
+            hierarchical sweep.
+          </p>
+
+          <div class="content has-text-justified" style="margin-top: 1.5em;">
+            <p>
+              So &ldquo;which factorization reaches lower NLL&rdquo; has no weight-free answer: each model wins under
+              the
+              weights its own training loss optimized, which makes any single-number comparison across losses close to
+              circular. The fix is to stop reporting a scalar and report the <strong>NLL vector</strong> (text,
+              semantic, per-codebook acoustic).
+              Its components turn out to be excellent capability predictors&mdash;<em>across</em> architectures and
+              losses, not just within one.
+              Spearman correlations over the 12-run matrix:
+            </p>
+          </div>
+
+          <div class="table-container">
+            <table class="table is-bordered is-striped is-narrow is-hoverable"
+              style="font-size: 0.85em; margin: 0 auto;">
+              <thead>
+                <tr>
+                  <th>Aligned pair</th>
+                  <th>|&rho;|</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>bits/text-token &harr; ASR 0-shot WER</td>
+                  <td><strong>0.94</strong></td>
+                </tr>
+                <tr>
+                  <td>semantic NLL &harr; sWUGGY (semantic-scored)</td>
+                  <td><strong>0.94</strong></td>
+                </tr>
+                <tr>
+                  <td>acoustic-cb1 NLL &harr; SALMon</td>
+                  <td><strong>0.86</strong></td>
+                </tr>
+                <tr>
+                  <td>acoustic-cb1 NLL &harr; TTS speaker similarity</td>
+                  <td><strong>0.85</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="help">
+            Magnitudes only. Each of these NLL components predicts its aligned capability. The uniform aggregate (bits
+            per audio-second) does not: it tracks the two acoustic metrics (SALMon, speaker similarity) and can mislead
+            on other capabilities across model classes&mdash;because 7 of every 8 audio tokens are late-RVQ
+            residuals whose bits carry little task-relevant information.
+          </p>
+
+          <div class="content has-text-justified"
+            style="background-color: #f9f9f9; border-left: 4px solid #ccc; padding: 1em 1.25em; border-radius: 4px; margin-top: 2rem;">
+            <p style="margin: 0;">
+              <strong>How this relates to the scaling result we found previously.</strong> SODA's headline method
+              finding&mdash;that
+              <a href="index.html#scaling-laws">capabilities are predictable from validation
+                loss</a>&mdash;<em>replicates here, and it stands</em>.
+              What this work adds is its scope. That relationship holds <em>within</em> a model family scored under
+              <em>its own</em> training
+              measure, which is exactly the setting it was established in (flattened + uniform CE, varying scale). It
+              does not license comparing a
+              scalar NLL across different training losses or architectures: there, the number you get is a choice of
+              importance measure, and
+              changing that choice reverses the ranking. Within the flattened family the original practice behaves
+              exactly as before
+              (&rho; = +1.00 for NLL &rarr; sWUGGY); the hierarchical family <em>breaks</em> under uniform NLL and is
+              restored by scoring it under
+              its own training measure (sWUGGY +0.09 &rarr; +0.77, tWUGGY +0.14 &rarr; +0.89).
+            </p>
+          </div>
+
+          <p style="font-size: 0.9em; color: #666; font-style: italic; margin-top: 0.8rem;">
+            This is also why the scale-up comparison further down has no NLL rows.
+          </p>
+
+        </div>
+      </div>
+      <!--/ Finding 1. -->
+
+      <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 2.5rem 0;">
+
+      <!-- Finding 2. -->
+      <div class="columns is-centered">
+        <div class="column is-full-width">
+
+          <h2 id="axis-split" class="title is-4">Finding 2: Hierarchical Owns Semantics, Flattened Owns Acoustics</h2>
+
+          <div class="content has-text-justified">
+            <p>
+              The headline pair at 3&times;10<sup>18</sup> FLOPs and d=768. The hierarchical model wins nearly every
+              capability: it <strong>roughly
+                halves ASR word error</strong> at both zero and two shots, edges TTS-WER, and leads sWUGGY, tStoryCloze,
+              tBLIMP and tWUGGY (per-run
+              numbers in the table below). The flattened model's wins are all
+              acoustic: uniform-scored SALMon (68.6 / 66.7), TTS speaker similarity (0.332 vs 0.230), and every acoustic
+              NLL component
+              (cb1&ndash;cb7 at 3.58&ndash;4.41 vs 4.57&ndash;4.94 nats), which is also what drives its 17% uniform-NLL
+              advantage. Roughly
+              <strong>72% of that advantage is architectural</strong> rather than a loss-weighting effect (P1b). sBLIMP
+              and sStoryCloze sit at
+              chance for both, as in the original study at this budget.
+            </p>
+            <p>
+              Generation <em>behavior</em> separates the arms beyond the scores, and the pattern is arm-wide rather than
+              pair-specific. The
+              flattened model fails to produce a terminating generation on 24% of TTS prompts, and even its surviving
+              transcripts are
+              deletion-dominated (18.2% DEL vs 10.9% SUB&mdash;truncated or incomplete speech), where the hierarchical
+              model terminates on all
+              1,088 and errs by substitution (17.8% SUB, 7.7% DEL). The non-terminating cases share a characteristic
+              failure mode: instead of ending the utterance the flattened model gets stuck in silence and runs on to the
+              generation cap. <strong>Every hierarchical run in the campaign terminates on 100% of prompts; four of five
+                flattened runs drop 24&ndash;71%.</strong>
+            </p>
+          </div>
+
+          <div class="table-container">
+            <table class="table is-bordered is-striped is-narrow is-hoverable"
+              style="font-size: 0.78em; margin: 0 auto;">
+              <thead>
+                <tr>
+                  <th>Run</th>
+                  <th>Arm</th>
+                  <th>Recipe</th>
+                  <th>bits/a&middot;s &darr;</th>
+                  <th>b/txt &darr;</th>
+                  <th>ASR-0s &darr;</th>
+                  <th>TTS-WER &darr;</th>
+                  <th>TTS-SIM &uarr;</th>
+                  <th>gen%</th>
+                  <th>sWUGGY</th>
+                  <th>tBLIMP</th>
+                  <th>SALMon</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>p1-flat</td>
+                  <td>flat</td>
+                  <td>uniform</td>
+                  <td>562.6</td>
+                  <td>1.93</td>
+                  <td>37.1</td>
+                  <td>31.2</td>
+                  <td><strong>0.332</strong></td>
+                  <td>76</td>
+                  <td>55.6</td>
+                  <td>62.0</td>
+                  <td>68.6</td>
+                </tr>
+                <tr>
+                  <td>p1-hier</td>
+                  <td>hier</td>
+                  <td>moshi</td>
+                  <td>658.1</td>
+                  <td>1.11</td>
+                  <td>19.4</td>
+                  <td>29.6</td>
+                  <td>0.230</td>
+                  <td>100</td>
+                  <td>57.9</td>
+                  <td>64.4</td>
+                  <td>66.7</td>
+                </tr>
+                <tr>
+                  <td>p1b-hier</td>
+                  <td>hier</td>
+                  <td>uniform</td>
+                  <td>631.8</td>
+                  <td>1.34</td>
+                  <td>22.5</td>
+                  <td><strong>17.8</strong></td>
+                  <td>0.330</td>
+                  <td>100</td>
+                  <td>57.1</td>
+                  <td>64.6</td>
+                  <td>68.9</td>
+                </tr>
+                <tr>
+                  <td>p1c-flat</td>
+                  <td>flat</td>
+                  <td>moshi</td>
+                  <td>653.4</td>
+                  <td>1.62</td>
+                  <td>28.5</td>
+                  <td>66.7</td>
+                  <td>0.223</td>
+                  <td>35</td>
+                  <td>56.3</td>
+                  <td>64.6</td>
+                  <td>68.6</td>
+                </tr>
+                <tr>
+                  <td>p2-flat-d512</td>
+                  <td>flat</td>
+                  <td>uniform</td>
+                  <td>567.7</td>
+                  <td>2.21</td>
+                  <td>46.9</td>
+                  <td>48.1</td>
+                  <td>0.318</td>
+                  <td>100</td>
+                  <td>54.9</td>
+                  <td>62.5</td>
+                  <td>68.5</td>
+                </tr>
+                <tr>
+                  <td>p2-hier-d512</td>
+                  <td>hier</td>
+                  <td>moshi</td>
+                  <td>668.1</td>
+                  <td>1.27</td>
+                  <td>24.2</td>
+                  <td>32.2</td>
+                  <td>0.197</td>
+                  <td>100</td>
+                  <td>57.0</td>
+                  <td>64.2</td>
+                  <td>65.9</td>
+                </tr>
+                <tr>
+                  <td>p2-flat-d896</td>
+                  <td>flat</td>
+                  <td>uniform</td>
+                  <td>562.2</td>
+                  <td>1.86</td>
+                  <td>32.2</td>
+                  <td>39.7</td>
+                  <td>0.322</td>
+                  <td>29</td>
+                  <td>55.8</td>
+                  <td>62.4</td>
+                  <td>68.9</td>
+                </tr>
+                <tr>
+                  <td>p2-hier-d896</td>
+                  <td>hier</td>
+                  <td>moshi</td>
+                  <td>657.2</td>
+                  <td>1.16</td>
+                  <td><strong>16.1</strong></td>
+                  <td>30.0</td>
+                  <td>0.234</td>
+                  <td>100</td>
+                  <td>57.7</td>
+                  <td>64.7</td>
+                  <td>67.2</td>
+                </tr>
+                <tr>
+                  <td>p3-small</td>
+                  <td>hier</td>
+                  <td>moshi</td>
+                  <td>673.1</td>
+                  <td>1.17</td>
+                  <td>21.8</td>
+                  <td>41.0</td>
+                  <td>0.217</td>
+                  <td>100</td>
+                  <td><strong>58.2</strong></td>
+                  <td>65.6</td>
+                  <td>66.4</td>
+                </tr>
+                <tr>
+                  <td>p3-large</td>
+                  <td>hier</td>
+                  <td>moshi</td>
+                  <td>656.8</td>
+                  <td>1.25</td>
+                  <td>19.5</td>
+                  <td>28.9</td>
+                  <td>0.227</td>
+                  <td>100</td>
+                  <td>57.6</td>
+                  <td>63.9</td>
+                  <td>66.8</td>
+                </tr>
+                <tr>
+                  <td>p4-flat</td>
+                  <td>flat</td>
+                  <td>uniform</td>
+                  <td>586.5</td>
+                  <td>2.64</td>
+                  <td>43.3</td>
+                  <td>47.5</td>
+                  <td>0.301</td>
+                  <td>63</td>
+                  <td>54.9</td>
+                  <td>61.3</td>
+                  <td>68.6</td>
+                </tr>
+                <tr>
+                  <td>p4-hier</td>
+                  <td>hier</td>
+                  <td>moshi</td>
+                  <td>674.5</td>
+                  <td>1.31</td>
+                  <td>20.9</td>
+                  <td>46.6</td>
+                  <td>0.194</td>
+                  <td>100</td>
+                  <td>57.2</td>
+                  <td>63.9</td>
+                  <td>66.1</td>
+                </tr>
+                <tr>
+                  <td>p5-decay</td>
+                  <td>hier</td>
+                  <td>decay</td>
+                  <td>650.4</td>
+                  <td>1.16</td>
+                  <td>18.9</td>
+                  <td>23.1</td>
+                  <td>0.290</td>
+                  <td>100</td>
+                  <td>57.7</td>
+                  <td><strong>65.8</strong></td>
+                  <td>67.9</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="help">
+            All 13 campaign runs. Paired-task scores in % (chance = 50); WER in %, lower better; bits/a&middot;s =
+            uniform-measure bits per
+            audio-second; b/txt = bits per text token; TTS-SIM = WavLM speaker cosine; gen% = share of the 1,088 TTS
+            prompts with a terminating
+            generation. p4-* are the 1&times;10<sup>18</sup> runs, everything else is 3&times;10<sup>18</sup>. Bold =
+            campaign best.
+            <strong>Where gen% &lt; 100, TTS-WER and TTS-SIM cover only the surviving prompts and carry survivorship
+              bias</strong>&mdash;those
+            flattened numbers are optimistic. Full machine-readable table, including per-codebook NLL and both scoring
+            variants:
+            <a
+              href="https://github.com/potsawee/marin/blob/soda-extension/experiments/audio/report/results/campaign_results.csv">campaign_results.csv</a>.
+          </p>
+
+        </div>
+      </div>
+      <!--/ Finding 2. -->
+
+      <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 2.5rem 0;">
+
+      <!-- Finding 3. -->
+      <div class="columns is-centered">
+        <div class="column is-full-width">
+
+          <h2 id="weighting" class="title is-4">Finding 3: How Much Does the Loss Weighting Matter?</h2>
+
+          <div class="content has-text-justified">
+            <p>
+              Architecture and loss weighting are two ways of doing the same thing: de-prioritizing acoustic tokens.
+              Crossing them gives a
+              2&times;2 that is strongly non-additive (interaction &asymp; &minus;65 bits per audio-second).
+            </p>
+          </div>
+
+          <div class="table-container">
+            <table class="table is-bordered is-narrow is-hoverable" style="font-size: 0.85em; margin: 0 auto;">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>Uniform CE</th>
+                  <th>Moshi 100/100/1</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Flattened</strong></td>
+                  <td>p1-flat &mdash; 562.6 bits/a&middot;s<br>ASR 37.1 &middot; TTS 31.2 @ 76%</td>
+                  <td>p1c-flat &mdash; 653.4 bits/a&middot;s<br>ASR 28.5 &middot; TTS 66.7 @ 35%</td>
+                </tr>
+                <tr>
+                  <td><strong>Hierarchical</strong></td>
+                  <td>p1b-hier &mdash; 631.8 bits/a&middot;s<br>ASR 22.5 &middot; TTS <strong>17.8</strong> @ 100%</td>
+                  <td>p1-hier &mdash; 658.1 bits/a&middot;s<br>ASR 19.4 &middot; TTS 29.6 @ 100%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="help">The 2&times;2. TTS entries are WER at the share of prompts that terminated.</p>
+
+          <div class="content has-text-justified" style="margin-top: 1.5em;">
+            <p>
+              On the <strong>flattened</strong> arm, weighting is a large, double-edged lever. Adding Moshi weighting
+              buys most of the hierarchical
+              arm's text and semantic profile&mdash;ASR 37.1 &rarr; 28.5, tBLIMP 62.0 &rarr; 64.6&mdash;at the cost of
+              nearly the entire acoustic-NLL
+              advantage (91 of the 96-bit gap). And the cost is not confined to likelihoods: termination falls from 76%
+              to 35% of prompts, and
+              TTS-WER on even the surviving third doubles, to 66.7.
+            </p>
+            <p>
+              On the <strong>hierarchical</strong> arm it is a small lever for likelihood capabilities and a large one
+              for generation. Removing it
+              costs some ASR (19.4 &rarr; 22.5) and buys back 26 bits of acoustic NLL&mdash;but TTS improves
+              dramatically, to
+              <strong>17.8 WER at 0.330 similarity</strong>, the campaign's best TTS model on both axes, matching the
+              flattened arm's speaker
+              similarity at half its word error.
+            </p>
+            <p>
+              The asymmetry is the insight. Once the architecture has delegated acoustics to a depth module,
+              down-weighting them in the loss has
+              little left to do; on the flattened arm the loss is the only such mechanism, so it does all the work and
+              pays the full acoustic
+              price. Generation is where the substitution breaks&mdash;synthesis is the one task where the acoustic axis
+              is load-bearing, and both
+              moshi-weighted cells pay for their tilted measure with worse, less reliable generation.
+            </p>
+          </div>
+
+          <h4 class="title is-5" style="color: #e06060;">A third recipe: graded per-codebook decay</h4>
+
+          <div class="content has-text-justified">
+            <p>
+              Moshi and uniform are the two extremes of one knob, and the 2&times;2 shows each buying one axis at the
+              other's expense. P5 asks whether something in between can beat <em>both</em> &mdash; rather than simply
+              landing halfway. Instead of a flat 100/100/1 or 1/1/1, the acoustic codebooks get geometrically decaying
+              weights:
+            </p>
+          </div>
+
+          <div
+            style="background-color: #f5f5f5; padding: 1em; font-size: 1.1em; border-radius: 4px; text-align: center; font-family: 'Noto Sans', sans-serif;">
+            w<sub>k</sub> = 100<sup>(1&minus;k/7)</sup> &nbsp;&nbsp;&rarr;&nbsp;&nbsp; cb1..cb7 = 51.8, 26.8, 13.9, 7.2,
+            3.7, 1.9, 1.0
+          </div>
+          <p class="help" style="text-align: center;">
+            Text and semantic tokens keep weight 100. This puts ~51% of the per-frame loss mass on acoustics, against
+            87.5% for uniform and 6.5%
+            for Moshi&mdash;concentrating it on the perceptually dominant early codebooks and starving the late
+            residuals. Precedent:
+            VoiceCraft's declining per-codebook weights (<a
+              href="https://arxiv.org/abs/2403.16973">arXiv:2403.16973</a>) are the same shape over
+            EnCodec's 4 levels; hierarchical precedents (Moshi, UniAudio) do not decay.
+          </p>
+
+          <div class="content has-text-justified" style="margin-top: 1.5em;">
+            <p>
+              All three recipes on the hierarchical arm at 3&times;10<sup>18</sup> and d=768, so only the weighting
+              differs:
+            </p>
+          </div>
+
+          <div class="table-container">
+            <table class="table is-bordered is-striped is-narrow is-hoverable"
+              style="font-size: 0.8em; margin: 0 auto;">
+              <thead>
+                <tr>
+                  <th rowspan="2">Weighting</th>
+                  <th colspan="4" style="text-align: center;">Semantic axis</th>
+                  <th colspan="3" style="text-align: center;">Generation axis</th>
+                  <th colspan="2" style="text-align: center;">Acoustic NLL</th>
+                </tr>
+                <tr>
+                  <th>sem NLL &darr;</th>
+                  <th>ASR-0s &darr;</th>
+                  <th>tBLIMP &uarr;</th>
+                  <th>tSC &uarr;</th>
+                  <th>TTS-WER &darr;</th>
+                  <th>TTS-SIM &uarr;</th>
+                  <th>SALMon &uarr;</th>
+                  <th>cb1 &darr;</th>
+                  <th>cb7 &darr;</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Moshi 100/100/1</td>
+                  <td>2.492</td>
+                  <td>19.4</td>
+                  <td>64.4</td>
+                  <td>61.3</td>
+                  <td>29.6</td>
+                  <td>0.230</td>
+                  <td>66.7</td>
+                  <td>4.57</td>
+                  <td>4.94</td>
+                </tr>
+                <tr>
+                  <td>Uniform 1/1/1</td>
+                  <td>2.547</td>
+                  <td>22.5</td>
+                  <td>64.6</td>
+                  <td>62.2</td>
+                  <td><strong>17.8</strong></td>
+                  <td><strong>0.330</strong></td>
+                  <td><strong>68.9</strong></td>
+                  <td>4.40</td>
+                  <td><strong>4.71</strong></td>
+                </tr>
+                <tr>
+                  <td><strong>Decay 100<sup>(1&minus;k/7)</sup></strong></td>
+                  <td><strong>2.485</strong></td>
+                  <td><strong>18.9</strong></td>
+                  <td><strong>65.8</strong></td>
+                  <td><strong>63.1</strong></td>
+                  <td>23.1</td>
+                  <td>0.290</td>
+                  <td>67.9</td>
+                  <td><strong>4.39</strong></td>
+                  <td>5.06</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="help">
+            Bold = best of the three. All three terminate on 100% of TTS prompts. tBLIMP 65.8 and tSC 63.1 are campaign
+            bests; ASR 18.9 is the best of the d=768 runs (p2-hier-d896's 16.1 is the campaign-wide best).
+          </p>
+
+          <div class="content has-text-justified" style="margin-top: 1.5em;">
+            <p>
+              Decay takes the whole semantic column outright and recovers most of the generation ground Moshi weighting
+              gives up. The last two columns show why: it models cb1 as well as uniform weighting does, and pays for
+              that
+              only on the highest-order residual, which little downstream depends on. <strong>This is the recipe we
+                carried into the scale-up.</strong>
+            </p>
+          </div>
+
+        </div>
+      </div>
+      <!--/ Finding 3. -->
+
+      <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 2.5rem 0;">
+
+      <!-- Finding 4. -->
+      <div class="columns is-centered">
+        <div class="column is-full-width">
+
+          <h2 id="secondary" class="title is-4">Finding 4: Width, Depth Size, Budget, and Decode Cost</h2>
+
+          <div class="content has-text-justified">
+            <p>
+              These are smaller probes than the isoflop suite behind the SODA paper &mdash; three widths, three depth
+              sizes and two budgets, one run each. They settled the design choices the campaign needed, but they are
+              observations at the budgets we ran rather than fitted trends.
+            </p>
+            <ul>
+              <li><strong>Width.</strong> Under an isoflop budget, wider means fewer steps. Across d = 512/768/896
+                neither arm's NLL moves much &mdash; a few bits per audio-second, on a curve that looks flat rather than
+                peaked &mdash; so <em>we cannot locate either arm's optimum from these runs, and we do not claim a width
+                  trend</em>. The capability metrics vary more over the same range (the hierarchical d=896 run is the
+                campaign's best model, ASR 16.1 / 15.1), but with one run per point and no seed replicates we cannot
+                separate a width effect from run-to-run variation. Settling this needs the isoflop treatment, which we
+                have not run for the hierarchical arm. The one difference too large to be noise is on the flattened arm,
+                where TTS termination falls 100% &rarr; 76% &rarr; 29% as width grows.</li>
+              <li><strong>Depth-transformer size.</strong> Shrinking the depth transformer from the dd384L4
+                default to dd256L2 costs 15 bits per audio-second; growing to dd512L6 buys 1.4 &mdash; the default sits
+                at the knee. Likelihood metrics are nearly insensitive, and the small variant even posts the best
+                hierarchical sWUGGY and tBLIMP: everything the paired benchmarks measure lives in the backbone.
+                Generation is the exception, and it is where an under-sized depth module is paid for (TTS-WER 41.0
+                against 29.6 for the default). <em>Small, but not below the knee.</em></li>
+              <li><strong>Budget.</strong> From 1&times;10<sup>18</sup> to 3&times;10<sup>18</sup> both arms improve on
+                essentially every axis, and <em>no ordering between them changes, on any metric</em> &mdash; including
+                the TTS split, where the hierarchy has the better WER and the flattened model the better speaker
+                similarity at both budgets. Two budgets is a check rather than a slope: it says the cheap pilots predict
+                the more expensive ones here, not how the gap behaves much further out.</li>
+              <li><strong>Decode cost.</strong> Analytic, so unlike the rest of this section it does not depend on run
+                count at all. The flattened model pays its 144,644-way head on all 8 tokens of every frame and carries a
+                KV cache of length 8<em>T</em>; the hierarchy pays a 130,308-way head once per frame plus 2,048-way
+                heads
+                within it, at KV length <em>T</em>. At the P1 model sizes that is 47.4 GFLOPs per generated audio-second
+                against 6.7 &mdash; <strong>a 7.0&times; advantage for the hierarchy</strong>, which depends only on the
+                factorization and so carries over to the scale-up unchanged.</li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+      <!--/ Finding 4. -->
+
+      <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 2.5rem 0;">
+
+      <!-- Scale-up. -->
+      <div class="columns is-centered">
+        <div class="column is-full-width">
+
+          <h2 id="soda-hier" class="title is-4">SODA-Hier: Scaling up p5 to 1&times;10<sup>20</sup> FLOPs</h2>
+
+          <div class="content has-text-justified">
+            <p>
+              The campaign's recommendation&mdash;hierarchical factorization, graded decay weighting, wide backbone,
+              small depth&mdash;was selected
+              on 1&times;10<sup>18</sup>/3&times;10<sup>18</sup> pilots. <strong>SODA-Hier</strong> asks whether it
+              survives an order of magnitude
+              more compute. It is essentially a scaled-up P5: the same arm and the same recipe at <strong>1.1B
+                parameters</strong> (a d1536/L15
+              backbone of ~990M plus a dd1152/L4 depth transformer of ~122M), trained on a 396k-hour Yodas+Emilia corpus
+              for
+              <strong>1.168&times;10<sup>20</sup> FLOPs&mdash;38.9&times; the campaign's 3&times;10<sup>18</sup>
+                point</strong>&mdash;and evaluated
+              on the identical battery.
+            </p>
+          </div>
+
+          <div class="content has-text-justified"
+            style="background-color: #f9f9f9; border-left: 4px solid #ccc; padding: 1em 1.25em; border-radius: 4px; margin-bottom: 2rem;">
+            <p style="margin: 0;">
+              <strong>Keep the scale in perspective.</strong> At 1.17&times;10<sup>20</sup> FLOPs this is a larger
+              <em>ablation</em>, not a large-scale run:
+              SODA's published run used 1.3&times;10<sup>22</sup> FLOPs, about <strong>110&times; more</strong>.
+              SODA-Hier extends the
+              campaign's compute ladder by an order of magnitude and shows the recipe holds there.
+            </p>
+          </div>
+
+          <p class="help">
+            <strong>It is a 55%-of-plan run, and that is deliberate rather than truncated.</strong> The plan was 95,033
+            steps (one epoch, 2.12&times;10<sup>20</sup>). Cluster contention made the remaining ~10 days unobtainable,
+            so we used the defining affordance of the warmup&ndash;stable&ndash;decay schedule: any stable-phase
+            checkpoint plus a decay leg is a finished model for the smaller budget. The stable trunk was stopped at step
+            42,346 and a 10,000-step linear decay leg branched from it, for 52,345 steps total. That puts the decay at
+            19.1% of the shortened run &mdash; inside the 10&ndash;20% band supported by MiniCPM and H&auml;gele et al.
+            (2024), and essentially the same 20% shape every campaign run used, which keeps the result on the campaign's
+            schedule line. Data seen stays under one epoch, so nothing repeats, and the trunk checkpoint is pinned and
+            resumable &mdash; a higher-budget point remains available without redoing any work.
+          </p>
+
+          <div class="table-container">
+            <table class="table is-bordered is-striped is-narrow is-hoverable"
+              style="font-size: 0.85em; margin: 0 auto;">
+              <thead>
+                <tr>
+                  <th>Metric</th>
+                  <th>p5-decay<br>(3&times;10<sup>18</sup>, 308M)</th>
+                  <th>SODA-Hier<br>(1.17&times;10<sup>20</sup>, 1.1B)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>bits per audio-second &darr;</td>
+                  <td>650.4</td>
+                  <td><strong>603.5</strong></td>
+                </tr>
+                <tr>
+                  <td>bits per text token &darr;</td>
+                  <td>1.161</td>
+                  <td><strong>0.738</strong></td>
+                </tr>
+                <tr>
+                  <td>semantic NLL &darr;</td>
+                  <td>2.485</td>
+                  <td><strong>2.166</strong></td>
+                </tr>
+                <tr>
+                  <td>ASR 0-shot WER &darr;</td>
+                  <td>18.9</td>
+                  <td><strong>7.7</strong></td>
+                </tr>
+                <tr>
+                  <td>ASR 2-shot WER &darr;</td>
+                  <td>18.3</td>
+                  <td><strong>7.2</strong></td>
+                </tr>
+                <tr>
+                  <td>TTS-WER &darr;</td>
+                  <td>23.1</td>
+                  <td><strong>17.2</strong></td>
+                </tr>
+                <tr>
+                  <td>TTS-SIM &uarr;</td>
+                  <td>0.290</td>
+                  <td><strong>0.362</strong></td>
+                </tr>
+                <tr>
+                  <td>sWUGGY / sWUGGY-sem</td>
+                  <td>57.7 / 63.8</td>
+                  <td><strong>60.4 / 67.1</strong></td>
+                </tr>
+                <tr>
+                  <td>tBLIMP / tWUGGY</td>
+                  <td>65.8 / 65.8</td>
+                  <td><strong>70.2 / 70.6</strong></td>
+                </tr>
+                <tr>
+                  <td>SALMon / SALMon-sem</td>
+                  <td>67.9 / 66.5</td>
+                  <td><strong>69.2 / 68.1</strong></td>
+                </tr>
+                <tr>
+                  <td>sBLIMP / sStoryCloze</td>
+                  <td>49.9 / 51.2</td>
+                  <td>51.8 / 50.6</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="help">
+            38.9&times; the compute, 3.6&times; the parameters, 9.4&times; the corpus. <strong>Every metric that
+              resolved above chance in the
+              campaign improves, several by large margins, and nothing regresses.</strong> sBLIMP and sStoryCloze remain
+            at chance, as they do at
+            every campaign budget, and MMLU/HellaSwag sit at chance (~0.25 / 0.27)&mdash;expected for a ~1B speech-first
+            model, and reported as
+            &ldquo;not above chance&rdquo; rather than as a trend.
+          </p>
+
+          <div class="content has-text-justified" style="margin-top: 1.5em;">
+            <p>
+              Two results deserve emphasis. <strong>ASR more than halves</strong>, 18.9 &rarr; 7.7 zero-shot; the
+              campaign's best ASR model managed
+              16.1, so the scaled run is at less than half that error on the same test set with identical decode
+              parameters. And <strong>the
+                acoustic axis moves with scale</strong>: the campaign's honest summary was that flattened models were
+              the better acoustic models,
+              with speaker similarity their strongest evidence (best flattened run 0.332, every hierarchical run
+              0.19&ndash;0.33). SODA-Hier reaches
+              0.362&mdash;above every flattened run in the campaign&mdash;while also posting the best TTS-WER. But those
+              flattened runs are
+              3&times;10<sup>18</sup> models. The harder test is against flattened models that are <em>also</em> scaled
+              up.
+            </p>
+          </div>
+
+        </div>
+      </div>
+      <!--/ Scale-up. -->
+
+      <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 2.5rem 0;">
+
+      <!-- Bracket. -->
+      <div class="columns is-centered">
+        <div class="column is-full-width">
+
+          <h2 id="bracket" class="title is-4">Against Compute-Optimal Flattened Models at a similar scale</h2>
+
+          <div class="content has-text-justified">
+            <p>
+              The campaign could only answer the flat-versus-hierarchical question at
+              1&times;10<sup>18</sup>/3&times;10<sup>18</sup>. Our original
+              isoflop sweep supplies the missing large-scale reference: flattened models trained near compute-optimally
+              at their scale, evaluated
+              with the same harness. SODA-Hier's budget falls between two of those points, and the parameter counts
+              bracket too
+              (851M / 1.1B / 1.23B):
+            </p>
+            <ul>
+              <li><strong>SODA-Flat-9e19</strong> &mdash; 851M (d1408/L14), <em>0.77&times;</em> SODA-Hier's training
+                budget.</li>
+              <li><strong>SODA-Flat-1.8e20</strong> &mdash; 1.23B (d1664/L17), <em>1.5&times;</em> SODA-Hier's training
+                budget.</li>
+            </ul>
+            <p>
+              That gives a reading rule. Where SODA-Hier beats the 1.5&times; model it is <strong>clearly
+                better</strong>&mdash;it wins
+              against more flattened compute than it had. Where it loses to the 0.77&times; model it is <strong>quite
+                likely worse</strong>&mdash;it
+              loses against less. Between the brackets is a draw.
+            </p>
+          </div>
+
+          <div class="table-container">
+            <table class="table is-bordered is-striped is-narrow is-hoverable"
+              style="font-size: 0.85em; margin: 0 auto;">
+              <thead>
+                <tr>
+                  <th>Metric</th>
+                  <th>SODA-Flat-9e19<br>(0.77&times;)</th>
+                  <th>SODA-Hier<br>1.17&times;10<sup>20</sup></th>
+                  <th>SODA-Flat-1.8e20<br>(1.5&times;)</th>
+                  <th>Verdict</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>ASR 0-shot WER &darr;</td>
+                  <td>15.5</td>
+                  <td><strong>7.7</strong></td>
+                  <td>11.9</td>
+                  <td><strong>clearly better</strong></td>
+                </tr>
+                <tr>
+                  <td>ASR 2-shot WER &darr;</td>
+                  <td>14.4</td>
+                  <td><strong>7.2</strong></td>
+                  <td>11.4</td>
+                  <td><strong>clearly better</strong></td>
+                </tr>
+                <tr>
+                  <td>sWUGGY speech</td>
+                  <td>57.1</td>
+                  <td><strong>60.4</strong></td>
+                  <td>57.6</td>
+                  <td><strong>clearly better</strong></td>
+                </tr>
+                <tr>
+                  <td>sWUGGY text</td>
+                  <td>68.3</td>
+                  <td><strong>70.6</strong></td>
+                  <td>69.6</td>
+                  <td><strong>clearly better</strong></td>
+                </tr>
+                <tr>
+                  <td>sBLIMP text</td>
+                  <td>67.7</td>
+                  <td><strong>70.2</strong></td>
+                  <td>69.7</td>
+                  <td><strong>clearly better</strong></td>
+                </tr>
+                <tr>
+                  <td>sBLIMP speech</td>
+                  <td>49.7</td>
+                  <td>51.8</td>
+                  <td>50.1</td>
+                  <td>&asymp;chance for all</td>
+                </tr>
+                <tr>
+                  <td>MMLU / HellaSwag-norm</td>
+                  <td>26.5 / 29.3</td>
+                  <td>25.4 / 27.4</td>
+                  <td>27.4 / 30.5</td>
+                  <td>&asymp;chance band</td>
+                </tr>
+                <tr>
+                  <td>SALMon</td>
+                  <td><strong>70.7</strong></td>
+                  <td>69.2</td>
+                  <td>70.6</td>
+                  <td><strong>quite likely worse</strong></td>
+                </tr>
+                <tr>
+                  <td>TTS-WER &darr;</td>
+                  <td>10.2</td>
+                  <td>17.2</td>
+                  <td><strong>9.5</strong></td>
+                  <td><strong>quite likely worse</strong></td>
+                </tr>
+                <tr>
+                  <td>TTS-SIM &uarr;</td>
+                  <td>0.504</td>
+                  <td>0.362</td>
+                  <td><strong>0.525</strong></td>
+                  <td><strong>quite likely worse</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="help">
+            Scores in %, chance = 50 except MMLU/HellaSwag (25). Both SODA-Flat models are near-compute-optimal at their
+            scale; their suffixes give the training budget.
+          </p>
+
+          <div class="content has-text-justified" style="margin-top: 1.5em;">
+            <p>
+              <strong>The campaign's axis split survives at scale, against compute-optimal opponents, on both
+                sides.</strong> SODA-Hier is clearly
+              better on every semantic, lexical, text and ASR metric that resolves&mdash;beating even the flattened
+              model with 1.5&times; its
+              compute&mdash;and quite likely worse on the acoustic and generation-quality axes, losing SALMon and both
+              TTS metrics to even the
+              0.77&times; model. The flattened arm's home turf extends, at compute-optimal scale, to TTS intelligibility
+              as well as speaker
+              similarity. The observation above&mdash;that SODA-Hier beats the <em>campaign</em> flats on TTS&mdash;does
+              not carry over to flattened
+              models that are also scaled up.
+            </p>
+            <!-- <p>
+              <strong>Held-out NLL is deliberately not tabulated here.</strong> The SODA-Flat models train with uniform
+              cross-entropy and SODA-Hier with
+              the decay weighting, and <a href="#nll">Finding 1</a> established that cross-loss NLL comparisons are
+              near-circular: any NLL row
+              would restate the training objectives rather than the models' quality.
+            </p> -->
+            <p>
+              We note that <strong>SODA-Hier is not compute-optimal at its budget</strong>. Its width was anchored to CSM
+              rather than isoflop-optimized, while the SODA-Flat models are near-optimal at theirs. This handicap makes the
+              hierarchy's wins conservative and its losses ambiguous.
+            </p>
+          </div>
+
+        </div>
+      </div>
+      <!--/ Bracket. -->
+
+      <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 2.5rem 0;">
+
+      <!-- Decay leg. -->
+      <!-- <div class="columns is-centered">
+        <div class="column is-full-width">
+
+          <h2 id="decay-leg" class="title is-4">The Decay Leg Is What Turns a Checkpoint Into a Model</h2>
+
+          <div class="content has-text-justified">
+            <p>
+              We ran three checkpoints through the same suite: two from the stable phase (steps 27,729 and 42,346, high
+              learning rate, undecayed)
+              and the final decayed model. The comparison isolates something the campaign could not see, because every
+              campaign run was only ever
+              evaluated after its decay.
+            </p>
+          </div>
+
+          <div class="table-container">
+            <table class="table is-bordered is-striped is-narrow is-hoverable"
+              style="font-size: 0.85em; margin: 0 auto;">
+              <thead>
+                <tr>
+                  <th>Metric</th>
+                  <th>27,729<br>(stable)</th>
+                  <th>42,346<br>(stable)</th>
+                  <th>52,345<br>(decayed)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>bits per audio-second &darr;</td>
+                  <td>630.7</td>
+                  <td>628.0</td>
+                  <td><strong>603.5</strong></td>
+                </tr>
+                <tr>
+                  <td>bits per text token &darr;</td>
+                  <td>1.129</td>
+                  <td>1.074</td>
+                  <td><strong>0.738</strong></td>
+                </tr>
+                <tr>
+                  <td>ASR 0-shot WER &darr;</td>
+                  <td>15.3</td>
+                  <td>16.1</td>
+                  <td><strong>7.7</strong></td>
+                </tr>
+                <tr>
+                  <td>TTS-WER &darr;</td>
+                  <td>20.7</td>
+                  <td>19.0</td>
+                  <td><strong>17.2</strong></td>
+                </tr>
+                <tr>
+                  <td>TTS-SIM &uarr;</td>
+                  <td>0.324</td>
+                  <td>0.334</td>
+                  <td><strong>0.362</strong></td>
+                </tr>
+                <tr>
+                  <td>sWUGGY</td>
+                  <td>59.3</td>
+                  <td>58.9</td>
+                  <td><strong>60.4</strong></td>
+                </tr>
+                <tr>
+                  <td>sBLIMP</td>
+                  <td>51.4</td>
+                  <td>50.6</td>
+                  <td><strong>51.8</strong></td>
+                </tr>
+                <tr>
+                  <td>SALMon</td>
+                  <td>67.6</td>
+                  <td>68.1</td>
+                  <td><strong>69.2</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="help">Two mid-training snapshots of one run plus its finished model &mdash; not a scaling ladder.
+          </p>
+
+          <div class="content has-text-justified" style="margin-top: 1.5em;">
+            <p>
+              <strong>Generation transforms; discrimination barely moves.</strong> Over the decay leg ASR halves (16.1
+              &rarr; 7.7) and bits per text
+              token drop 31%, while sBLIMP, sWUGGY and SALMon gain only 1&ndash;2 points and StoryCloze is flat.
+            </p>
+            <p>
+              The 14,617 stable steps between the first two checkpoints are the control that makes this readable: they
+              moved ASR the <em>wrong
+                way</em> (15.3 &rarr; 16.1) and bits per audio-second by only &minus;2.7, whereas the 10,000 decay steps
+              that follow move ASR by
+              &minus;8.4 points and bits per audio-second by &minus;24.5. The effect is attributable to the annealing,
+              not to the extra tokens.
+            </p>
+            <p>
+              The mechanism is consistent across metrics: decaying the learning rate to zero sharpens the output
+              distribution. That is worth little
+              to a contrastive task, which only needs the <em>ordering</em> of two sequence likelihoods to come out
+              right, and worth a great deal to
+              autoregressive generation, where every sampled token is drawn from that distribution and errors compound.
+              <strong>Practical consequence: never judge a WSD run's generative quality from a stable-phase
+                checkpoint</strong>&mdash;mid-training
+              ASR and TTS numbers understate the finished model badly, and the gap is largest exactly where users look.
+            </p>
+          </div>
+
+        </div>
+      </div> -->
+      <!--/ Decay leg. -->
+
+      <!-- <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 2.5rem 0;"> -->
+
+      <!-- Limits. -->
+      <!-- <div class="columns is-centered">
+        <div class="column is-full-width">
+
+          <h2 id="limits" class="title is-4">What This Does and Does Not Show</h2>
+
+          <div class="content has-text-justified">
+            <ul>
+              <li><strong>One seed per configuration</strong>, English only, and LibriSpeech-centric ASR.</li>
+              <li><strong>Survivorship bias in four flattened TTS rows.</strong> Where termination is below 100%, only
+                the surviving prompts are
+                scored, so those WER and similarity numbers are optimistic.</li>
+              <li><strong>Small correlation samples</strong> (n = 4&ndash;6 per family), and sBLIMP/sStoryCloze sit at
+                chance at these budgets, so
+                their correlations are noise.</li>
+              <li><strong>The scale-up is not a controlled isoflop point.</strong> Against the campaign it changes
+                budget, width <em>and</em> corpus
+                at once&mdash;deliberately, since the goal was the strongest model obtainable at that budget. Read it as
+                &ldquo;the recipe
+                holds&rdquo;, not as a measured scaling exponent.</li>
+              <li><strong>No same-corpus flattened twin exists at 10<sup>20</sup> scale.</strong> The bracket is
+                bracketing evidence with the
+                confounds listed above, not a controlled isoflop pair like the campaign's.</li>
+            </ul>
+            <p>Three claims this evidence does <em>not</em> support, and which we are not making:</p>
+            <ul>
+              <li>That hierarchical beats flattened outright at 10<sup>20</sup> FLOPs. There is no same-corpus flattened
+                twin at that scale, and the
+                acoustic and TTS axes go the other way.</li>
+              <li>That SODA-Hier is a flagship or release model. It is an ablation-scale run, ~110&times; below the
+                published HERO budget.</li>
+              <li>Any cross-loss ranking by scalar NLL, for the reasons in <a href="#nll">Finding 1</a>.</li>
+            </ul>
+          </div>
+
+        </div>
+      </div> -->
+      <!--/ Limits. -->
+
+      <!-- <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 2.5rem 0;"> -->
+
+      <!-- Resources. -->
+      <!-- <div class="columns is-centered">
+        <div class="column is-full-width">
+
+          <h2 id="resources" class="title is-4">Code, Logs, Weights, and Numbers</h2>
+
+          <div class="content has-text-justified">
+            <ul>
+              <li><strong>Code</strong> &mdash;
+                <a href="https://github.com/potsawee/marin/tree/soda-extension/experiments/audio">the
+                  <code>soda-extension</code> branch</a>:
+                the hierarchical model and its decay loss, the isoflop solver, the FLOPs accountants behind the
+                decode-cost result, the
+                per-experiment run definitions, and the HuggingFace export with a verified JAX&harr;PyTorch parity
+                harness.
+              </li>
+              <li><strong>Training logs</strong> &mdash;
+                <a href="https://wandb.ai/potsawee/soda-extension">the <code>soda-extension</code> W&amp;B project</a>:
+                loss curves for every run
+                in this write-up, including the scale-up's stable trunk and its decay branch.
+              </li>
+              <li><strong>Weights</strong> &mdash; the campaign runs and SODA-Hier will be released in the
+                <a href="https://huggingface.co/collections/soda-research/hierarchical-models">hierarchical-models
+                  collection</a>. The upload has
+                not happened yet, so that link will not resolve until it does.
+              </li>
+              <li><strong>The numbers</strong> &mdash; every figure quoted on this page comes from the write-up in the
+                repository:
+                <a
+                  href="https://github.com/potsawee/marin/blob/soda-extension/experiments/audio/report/FINDINGS.md">FINDINGS.md</a>
+                for the
+                analysis,
+                <a
+                  href="https://github.com/potsawee/marin/blob/soda-extension/experiments/audio/report/EXPERIMENTS.md">EXPERIMENTS.md</a>
+                for the
+                per-experiment registry, and
+                <a
+                  href="https://github.com/potsawee/marin/blob/soda-extension/experiments/audio/report/results/campaign_results.csv">campaign_results.csv</a>
+                for the full machine-readable results matrix.
+              </li>
+            </ul>
+          </div>
+
+        </div>
+      </div> -->
+      <!--/ Resources. -->
+
+    </div>
+  </section>
+
+</body>
+
+</html>

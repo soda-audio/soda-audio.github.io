@@ -124,6 +124,17 @@
                   </a>
               </span>
 
+              <!-- Hierarchical Models Link. -->
+              <span class="link-block">
+                <a href="hierarchical.html"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="fas fa-layer-group"></i>
+                  </span>
+                  <span>Hierarchical Models (July 2026)</span>
+                  </a>
+              </span>
+
               <!-- <span class="link-block">
                 <a href="#"
                    class="external-link button is-normal is-rounded is-dark">
@@ -133,7 +144,11 @@
                   <span>arXiv</span>
                 </a>
               </span> -->
-              
+
+            </div>
+
+            <div class="publication-links">
+
               <!-- Code Link. -->
               <span class="link-block">
                 <a href="https://github.com/potsawee/marin/tree/audio-release-pr/experiments/audio"
@@ -141,7 +156,7 @@
                   <span class="icon">
                       <i class="fab fa-github"></i>
                   </span>
-                  <span>Training Code</span>
+                  <span>Project Code</span>
                   </a>
               </span>
 
@@ -199,6 +214,14 @@
           <p>
             <strong>SODA</strong> is a unified pre-trained audio backbone where any audio-language task can be formulated as next-token prediction—through prompting and/or fine-tuning.
             Check out the <a href="experiment_log.html">Experiment Log</a> for the full story of how we got here.
+          </p>
+          <p>
+            <strong>Update (July 2026).</strong> SODA scales one architectural choice: flattening each frame's codebooks (8 in our setup) into a single token stream.
+            Is that the right choice to scale? The alternative used by CSM and Moshi—a backbone over frames plus a small depth transformer within each frame—spends
+            8&times; fewer sequence positions per second of audio and decodes ~7&times; more cheaply.
+            So we ran a compute-matched comparison: 13 runs at 1&times;10<sup>18</sup>/3&times;10<sup>18</sup> FLOPs, then scaled the winning recipe to <strong>SODA-Hier</strong>, a 1.1B model at 1.17&times;10<sup>20</sup> FLOPs.
+            The two families split along a clean axis—hierarchical wins semantics and ASR, flattened wins acoustics and speech synthesis.
+            See <a href="hierarchical.html">Hierarchical Models</a>.
           </p>
         </div>
       </div>
